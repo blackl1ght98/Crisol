@@ -1,0 +1,38 @@
+# EXPERIMENTAL: ejecutar Wine/QEMU dentro de Flatpak exige un sandbox
+# permisivo. bwrap anidado, /dev/kvm y el audio pueden fallar según el kernel,
+# la versión de Flatpak y los grupos del host; el fallback a VM no está
+# garantizado. Revisa docs/CONTRIBUTING.md antes de abrir un issue.
+id: org.blackl1ght98.Crisol
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: crisol
+
+finish-args:
+  - --share=network       # winetricks descarga runtimes de fuentes oficiales
+  - --socket=wayland
+  - --socket=x11
+  - --filesystem=home     # prefijos, catálogo, logs e ISOs de las VMs
+  - --device=all          # necesario para /dev/kvm; requiere permisos en el host
+  - --socket=pulseaudio   # PipeWire-Pulse suele exponer este socket
+
+modules:
+  - name: crisol
+    buildsystem: simple
+    build-commands:
+      - export CARGO_HOME=/run/build/crisol/cargo
+      - . /usr/lib/sdk/rust-stable/enable.sh && cargo build --release --offline
+      - install -Dm755 target/release/crisol /app/bin/crisol
+      - install -Dm644 README.md /app/share/doc/crisol/README.md
+      - install -d /app/share/crisol/recipes
+      - install -m644 recipes/*.recipe /app/share/crisol/recipes/
+      - install -Dm644 assets/crisol.svg /app/share/icons/hicolor/scalable/apps/crisol.svg
+      # No existe assets/*.desktop en el repositorio: no se inventa uno.
+      # `crisol setup-desktop` genera el .desktop en ~/.local/share/applications
+      # fuera del sandbox, por lo que la integración con el escritorio es manual.
+    sources:
+      - type: git
+        url: https://github.com/blackl1ght98/Crisol
+        branch: main  # cambia a `tag: v0.1.0` cuando exista esa etiqueta

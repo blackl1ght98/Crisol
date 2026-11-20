@@ -60,20 +60,31 @@ pub fn setup(paths: &Paths) -> Result<(), String> {
             .arg(paths.applications.as_os_str())
             .status();
     }
-    crate::ui::ok(&format!("Registrado como manejador de: {}", MIMES.join(", ")));
+    crate::ui::ok(&format!(
+        "Registrado como manejador de: {}",
+        MIMES.join(", ")
+    ));
     Ok(())
 }
 
 fn safe_name(name: &str) -> String {
     name.chars()
-        .map(|c| if c == '"' || c == '\n' || c == '\r' { ' ' } else { c })
+        .map(|c| {
+            if c == '"' || c == '\n' || c == '\r' {
+                ' '
+            } else {
+                c
+            }
+        })
         .collect()
 }
 
 /// Crea el .desktop de una app instalada.
 pub fn write_app(paths: &Paths, entry: &Entry) -> Result<PathBuf, String> {
     let bin = current_bin()?;
-    let file = paths.applications.join(format!("crisol-{}.desktop", entry.id));
+    let file = paths
+        .applications
+        .join(format!("crisol-{}.desktop", entry.id));
     let icon = if entry.icon.is_empty() {
         default_icon(paths)?.to_string_lossy().to_string()
     } else {
@@ -98,7 +109,8 @@ pub fn write_app(paths: &Paths, entry: &Entry) -> Result<PathBuf, String> {
         args,
         icon
     );
-    fs::write(&file, content).map_err(|e| format!("No se pudo escribir {}: {e}", file.display()))?;
+    fs::write(&file, content)
+        .map_err(|e| format!("No se pudo escribir {}: {e}", file.display()))?;
     if let Some(cmd) = which("update-desktop-database") {
         let _ = Command::new(cmd)
             .arg(paths.applications.as_os_str())

@@ -18,7 +18,7 @@ pub struct Entry {
 }
 
 fn clean(s: &str) -> String {
-    s.replace('\t', " ").replace('\n', " ").replace('\r', " ")
+    s.replace(['\t', '\n', '\r'], " ")
 }
 
 impl Entry {

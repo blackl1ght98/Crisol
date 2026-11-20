@@ -36,9 +36,7 @@ fn main() {
 
     let code = match cmd {
         Command::Help => 0,
-        Command::Install(path, opts) if opts.vm => {
-            result_code(vm::handoff(&paths, &path))
-        }
+        Command::Install(path, opts) if opts.vm => result_code(vm::handoff(&paths, &path)),
         Command::Install(path, opts) => match engine::install(&paths, &opts, &path) {
             Ok(report) => {
                 ui::detail(&format!(
@@ -112,6 +110,13 @@ fn main() {
         )),
         Command::VmInstall { name, exe } => result_code(vm::install(&paths, &name, &exe)),
         Command::Panel(port) => result_code(panel::serve(&paths, port)),
+        Command::FeedbackExport(path) => {
+            result_code(panel::export_feedback(&paths, path.as_deref()))
+        }
+        Command::FeedbackImport(path) => result_code(panel::import_feedback(&paths, &path)),
+        Command::FeedbackStats => result_code(panel::show_stats(&paths)),
+        Command::RecipeImport(dir) => result_code(recipe::import_dir(&paths, &dir)),
+        Command::RecipeExport(dir) => result_code(recipe::export_dir(&paths, &dir)),
     };
     std::process::exit(code);
 }

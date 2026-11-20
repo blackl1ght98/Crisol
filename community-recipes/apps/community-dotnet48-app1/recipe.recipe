@@ -1,0 +1,9 @@
+# Receta comunitaria: app-dotnet48
+# Fixture: logs/dotnet48-install.log
+[community-dotnet48-app1]
+confidence = 0.91
+priority = 21
+match_log_any = mscorlib.dll, dotnet48, .net framework 4
+action_winetricks = dotnet48
+action_message = Instalando .NET Framework 4.8 (receta comunitaria)...
+action_retry = true

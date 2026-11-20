@@ -1,0 +1,9 @@
+# Receta comunitaria: app-oleaut32
+# Fixture: logs/oleaut32-install.log
+[community-oleaut32-app1]
+confidence = 0.86
+priority = 17
+match_log_any = oleaut32.dll, error 0x80040154, class not registered
+action_winetricks = oleaut32
+action_message = Registrando oleaut32 con winetricks (receta comunitaria)...
+action_retry = true

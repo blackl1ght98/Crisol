@@ -1,0 +1,44 @@
+# PKGBUILD para Crisol (https://github.com/blackl1ght98/Crisol)
+# La fuente es la URL de Git; md5sums=('SKIP') es lo habitual en fuentes VCS.
+
+pkgname=crisol
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Capa de orquestación de compatibilidad sobre Wine: instala .exe/.msi, repara y los integra en el escritorio"
+arch=('x86_64')
+url="https://github.com/blackl1ght98/Crisol"
+license=('MIT')
+depends=(wine winetricks bubblewrap)
+optdepends=(
+  'qemu: fallback a una VM con Windows real'
+  'ovmf: firmware UEFI para la VM'
+  'virt-manager: gestión gráfica de la VM'
+  'virtio-win: controladores virtio para invitados Windows'
+  'pipewire: audio en VM'
+)
+source=("$url.git")
+md5sums=('SKIP')
+
+build() {
+  cd "$srcdir/Crisol"
+  cargo build --release
+}
+
+package() {
+  cd "$srcdir/Crisol"
+
+  install -Dm755 target/release/crisol "$pkgdir/usr/bin/crisol"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # Copia de referencia: core.recipe va compilado dentro del binario y las
+  # recetas del usuario se leen de ~/.config/crisol/recipes/*.recipe.
+  install -d "$pkgdir/usr/share/crisol/recipes"
+  install -m644 recipes/*.recipe "$pkgdir/usr/share/crisol/recipes/"
+
+  install -Dm644 assets/crisol.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/crisol.svg"
+
+  # assets/ no contiene ningún .desktop, así que no se inventa uno aquí.
+  # Crisol lo genera en ~/.local/share/applications con `crisol setup-desktop`.
+}

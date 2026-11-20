@@ -42,7 +42,11 @@ fn resolve_engine(preferred: &Option<String>) -> String {
     if let Some(p) = preferred {
         candidates.push(p.clone());
     }
-    candidates.extend(["wine", "wine64", "wine-stable"].iter().map(|s| s.to_string()));
+    candidates.extend(
+        ["wine", "wine64", "wine-stable"]
+            .iter()
+            .map(|s| s.to_string()),
+    );
     for c in candidates {
         if runner::which(&c).is_some() {
             return c;
@@ -135,9 +139,22 @@ fn is_candidate(name: &str) -> bool {
         return false;
     }
     let blocked = [
-        "unins", "uninstall", "setup", "update", "updater", "dotnet", "wineboot", "cmd.exe",
-        "explorer.exe", "notepad.exe", "regedit.exe", "msiexec.exe", "helper", "service",
-        "crashhandler", "uninstaller",
+        "unins",
+        "uninstall",
+        "setup",
+        "update",
+        "updater",
+        "dotnet",
+        "wineboot",
+        "cmd.exe",
+        "explorer.exe",
+        "notepad.exe",
+        "regedit.exe",
+        "msiexec.exe",
+        "helper",
+        "service",
+        "crashhandler",
+        "uninstaller",
     ];
     !blocked.iter().any(|b| n.contains(b))
 }
@@ -152,7 +169,10 @@ fn find_installed_exe(
     walk_exes(&prefix.path, &prefix.path, 0, &mut all);
 
     if let Some(ov) = override_rel {
-        if let Some(found) = all.iter().find(|p| p.to_string_lossy().replace('\\', "/") == ov) {
+        if let Some(found) = all
+            .iter()
+            .find(|p| p.to_string_lossy().replace('\\', "/") == ov)
+        {
             return Some(found.clone());
         }
     }
@@ -232,7 +252,9 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
     let mut engine = resolve_engine(&opts.engine);
     if let Some(wanted) = &opts.engine {
         if !runner::which(wanted).is_some() {
-            ui::warn(&format!("Motor '{wanted}' no encontrado; se usa '{engine}'"));
+            ui::warn(&format!(
+                "Motor '{wanted}' no encontrado; se usa '{engine}'"
+            ));
         }
     }
 
@@ -258,7 +280,10 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
                 attempt, opts.max_attempts, short_engine
             ),
         );
-        ui::detail(&format!("Comando: {engine} {}", installer_args(&installer, &detection, opts.interactive).join(" ")));
+        ui::detail(&format!(
+            "Comando: {engine} {}",
+            installer_args(&installer, &detection, opts.interactive).join(" ")
+        ));
         set_env(&mut env, "WINEDLLOVERRIDES", &overrides.join(";"));
         let result = runner::run(&RunOptions {
             prefix: &prefix.path,
@@ -307,7 +332,11 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
             if let Some(msg) = &r.message {
                 ui::info(msg);
             }
-            for a in r.actions.iter().filter(|a| matches!(a, Action::Reset(true))) {
+            for a in r
+                .actions
+                .iter()
+                .filter(|a| matches!(a, Action::Reset(true)))
+            {
                 let _ = a;
                 prefix.rollback()?;
                 prefix.snapshot(paths)?;
@@ -400,7 +429,9 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
             ui::info("Agotados los intentos: pasando el instalador a la VM de Windows...");
             let _ = crate::vm::handoff(paths, &installer);
         } else {
-            ui::info("Si el fallo es por anti-cheat/DRM/drivers, un Windows real suele resolverlo:");
+            ui::info(
+                "Si el fallo es por anti-cheat/DRM/drivers, un Windows real suele resolverlo:",
+            );
             ui::detail("crisol vm create windows --iso /ruta/Windows.iso");
             ui::detail(&format!("crisol install {} --vm", installer.display()));
             ui::detail("o vuelve a intentar con: --vm-fallback");
@@ -409,8 +440,8 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
     }
 
     ui::step(4, 6, "Localizando el ejecutable instalado");
-    let exe_rel = find_installed_exe(&prefix, &before, start, exe_override.as_deref())
-        .ok_or_else(|| {
+    let exe_rel =
+        find_installed_exe(&prefix, &before, start, exe_override.as_deref()).ok_or_else(|| {
             format!(
                 "La instalacion termino pero no se encontro un .exe razonable en {}",
                 prefix.path.display()
@@ -515,7 +546,10 @@ pub fn repair(paths: &Paths, id: &str) -> Result<(), String> {
         gpu: None,
         port: 8765,
     };
-    ui::info(&format!("Reparando {} desde {}", entry.name, entry.installer));
+    ui::info(&format!(
+        "Reparando {} desde {}",
+        entry.name, entry.installer
+    ));
     install(paths, &opts, Path::new(&entry.installer))?;
     Ok(())
 }
@@ -526,7 +560,7 @@ pub fn list(paths: &Paths) -> Result<(), String> {
         ui::info("El catalogo esta vacio. Instala algo con: crisol install archivo.exe");
         return Ok(());
     }
-    println!("{:<28} {:<28} {:<10} {}", "ID", "NOMBRE", "ESTADO", "EJECUTABLE");
+    println!("{:<28} {:<28} {:<10} EJECUTABLE", "ID", "NOMBRE", "ESTADO");
     for e in entries {
         println!(
             "{:<28} {:<28} {:<10} {}",
@@ -553,7 +587,15 @@ pub fn remove(paths: &Paths, id: &str) -> Result<(), String> {
 
 pub fn doctor(paths: &Paths) -> Result<(), String> {
     ui::header("Diagnostico del entorno");
-    for bin in ["wine", "wineboot", "winetricks", "bwrap", "xdg-mime", "cp", "mv"] {
+    for bin in [
+        "wine",
+        "wineboot",
+        "winetricks",
+        "bwrap",
+        "xdg-mime",
+        "cp",
+        "mv",
+    ] {
         match runner::which(bin) {
             Some(p) => ui::ok(&format!("{bin}: {}", p.display())),
             None => ui::warn(&format!("{bin}: no encontrado")),
@@ -575,6 +617,21 @@ pub fn doctor(paths: &Paths) -> Result<(), String> {
     ui::info(&format!("HOME: {}", paths.home.display()));
     ui::info(&format!("Prefijos en: {}", paths.prefixes.display()));
     ui::info(&format!("Catalogo: {}", paths.catalog.display()));
+    Ok(())
+}
+
+pub fn show_recipes(paths: &Paths) -> Result<(), String> {
+    let recipes = recipe::parse_all(include_str!("../recipes/core.recipe"), &paths.recipes);
+    println!("{:<26} {:>6} {:>8}  ORIGEN", "ID", "SCORE", "REGISTRO");
+    for r in recipes {
+        println!(
+            "{:<26} {:>6.0} {:>8}  {}",
+            r.id,
+            r.score(),
+            r.matchers.len(),
+            r.source
+        );
+    }
     Ok(())
 }
 
@@ -600,24 +657,11 @@ mod tests {
         );
         assert!(installer_args(exe, &detection(InstallerKind::Inno), false)
             .contains(&"/VERYSILENT".to_string()));
-        assert!(installer_args(exe, &detection(InstallerKind::Msi), false)
-            .contains(&"/qn".to_string()));
-        assert!(!installer_args(exe, &detection(InstallerKind::Nsis), true)
-            .contains(&"/S".to_string()));
-    }
-}
-
-pub fn show_recipes(paths: &Paths) -> Result<(), String> {
-    let recipes = recipe::parse_all(include_str!("../recipes/core.recipe"), &paths.recipes);
-    println!("{:<26} {:>6} {:>8}  {}", "ID", "SCORE", "REGISTRO", "ORIGEN");
-    for r in recipes {
-        println!(
-            "{:<26} {:>6.0} {:>8}  {}",
-            r.id,
-            r.score(),
-            r.matchers.len(),
-            r.source
+        assert!(
+            installer_args(exe, &detection(InstallerKind::Msi), false).contains(&"/qn".to_string())
+        );
+        assert!(
+            !installer_args(exe, &detection(InstallerKind::Nsis), true).contains(&"/S".to_string())
         );
     }
-    Ok(())
 }

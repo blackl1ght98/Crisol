@@ -36,7 +36,7 @@ fn contains_ci(haystack: &[u8], needle: &[u8]) -> bool {
     }
     haystack
         .windows(needle.len())
-        .any(|w| w.iter().zip(needle).all(|(a, b)| a.to_ascii_lowercase() == b.to_ascii_lowercase()))
+        .any(|w| w.iter().zip(needle).all(|(a, b)| a.eq_ignore_ascii_case(b)))
 }
 
 fn u16le(buf: &[u8], at: usize) -> Option<u16> {
@@ -50,8 +50,7 @@ fn u32le(buf: &[u8], at: usize) -> Option<u32> {
 }
 
 pub fn detect(path: &Path) -> Result<Detection, String> {
-    let buf = fs::read(path)
-        .map_err(|e| format!("No se pudo leer {}: {e}", path.display()))?;
+    let buf = fs::read(path).map_err(|e| format!("No se pudo leer {}: {e}", path.display()))?;
     if buf.len() < 64 {
         return Err("El archivo es demasiado pequeño para ser un instalador".to_string());
     }
@@ -99,7 +98,11 @@ pub fn detect(path: &Path) -> Result<Detection, String> {
         (b"inno setup", "inno setup", InstallerKind::Inno),
         (b"nullsoft", "nsis", InstallerKind::Nsis),
         (b"nsis", "nsis", InstallerKind::Nsis),
-        (b"installshield", "installshield", InstallerKind::InstallShield),
+        (
+            b"installshield",
+            "installshield",
+            InstallerKind::InstallShield,
+        ),
     ];
     for (needle, hint, detected) in checks {
         if contains_ci(&buf, needle) {

@@ -1,0 +1,9 @@
+# Receta comunitaria: app-vcrun2022
+# Fixture: logs/vcrun2022-install.log
+[community-vcrun2022-app1]
+confidence = 0.93
+priority = 22
+match_log_any = msvcp140.dll, vcruntime140.dll, api-ms-win-crt-runtime-l1-1-0.dll
+action_winetricks = vcrun2022
+action_message = Instalando Visual C++ 2022 (receta comunitaria)...
+action_retry = true

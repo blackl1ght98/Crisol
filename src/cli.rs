@@ -69,6 +69,11 @@ pub enum Command {
         exe: PathBuf,
     },
     Panel(u16),
+    FeedbackExport(Option<PathBuf>),
+    FeedbackImport(PathBuf),
+    FeedbackStats,
+    RecipeImport(PathBuf),
+    RecipeExport(PathBuf),
     Help,
 }
 
@@ -199,6 +204,33 @@ pub fn parse(args: Vec<String>) -> Command {
         };
     }
 
+    if positional.first().map(|s| s.as_str()) == Some("feedback") {
+        return match positional.get(1).map(|s| s.as_str()).unwrap_or("") {
+            "export" => Command::FeedbackExport(positional.get(2).map(PathBuf::from)),
+            "import" => match positional.get(2) {
+                Some(p) => Command::FeedbackImport(PathBuf::from(p)),
+                None => Command::Help,
+            },
+            "" | "stats" => Command::FeedbackStats,
+            _ => Command::Help,
+        };
+    }
+
+    if positional.first().map(|s| s.as_str()) == Some("recipes") {
+        return match positional.get(1).map(|s| s.as_str()).unwrap_or("") {
+            "import" => match positional.get(2) {
+                Some(p) => Command::RecipeImport(PathBuf::from(p)),
+                None => Command::Help,
+            },
+            "export" => match positional.get(2) {
+                Some(p) => Command::RecipeExport(PathBuf::from(p)),
+                None => Command::Help,
+            },
+            "" | "list" => Command::Recipes,
+            _ => Command::Help,
+        };
+    }
+
     let cmd = positional[0].clone();
     let arg = positional.get(1).cloned();
 
@@ -241,6 +273,11 @@ pub fn print_help() {
            crisol vm create <vm> --iso ISO [--ram N] [--disk N] [--gpu-pci ADDR]\n\
            crisol vm list | vm start <vm> | vm install <vm> <archivo>\n\
            crisol panel [--port 8765]          Panel web local de feedback\n\
+           crisol feedback stats               Votos y tasa de acierto por receta\n\
+           crisol feedback export [archivo]    Exportar feedback.tsv\n\
+           crisol feedback import <archivo>    Importar un feedback compartido\n\
+           crisol recipes import <dir>         Importar recetas compartidas\n\
+           crisol recipes export <dir>         Exportar recetas a un directorio\n\
            crisol --handler <archivo>     Modo interno para el gestor de archivos\n\
          \n\
          OPCIONES\n\

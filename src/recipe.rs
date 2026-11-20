@@ -1,10 +1,12 @@
 //! Parser y motor de recetas. DSL minimalista, sin dependencias externas,
 //! para que el proyecto compile con un Rust vanilla recien instalado.
 
+use crate::paths::Paths;
+use crate::ui;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Clone, Debug)]
 pub enum Matcher {
@@ -203,7 +205,10 @@ pub struct MatchCtx<'a> {
 }
 
 fn parse_bool(v: &str) -> bool {
-    matches!(v.trim().to_lowercase().as_str(), "1" | "true" | "yes" | "on" | "si")
+    matches!(
+        v.trim().to_lowercase().as_str(),
+        "1" | "true" | "yes" | "on" | "si"
+    )
 }
 
 fn split_lower(v: &str) -> Vec<String> {
@@ -280,7 +285,9 @@ pub fn parse_all(embedded: &str, user_dir: &Path) -> Vec<Recipe> {
                 if fields.len() != 2 {
                     continue;
                 }
-                if let (Ok(delta), Some(recipe)) = (fields[1].parse::<f32>(), by_id.get_mut(fields[0])) {
+                if let (Ok(delta), Some(recipe)) =
+                    (fields[1].parse::<f32>(), by_id.get_mut(fields[0]))
+                {
                     recipe.confidence = (recipe.confidence + delta).clamp(0.0, 1.0);
                 }
             }
@@ -356,6 +363,97 @@ fn glob_exists(root: &Path, pattern: &str) -> bool {
     walk(root, root, pattern, 0)
 }
 
+fn collect_recipes(dir: &Path, out: &mut Vec<PathBuf>, depth: usize) {
+    if depth > 6 {
+        return;
+    }
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_symlink() {
+            continue;
+        }
+        if path.is_dir() {
+            collect_recipes(&path, out, depth + 1);
+        } else if path.extension().and_then(|s| s.to_str()) == Some("recipe") {
+            out.push(path);
+        }
+    }
+}
+
+/// Copia todos los `*.recipe` de un directorio compartido al directorio de
+/// recetas del usuario. Busca también en subdirectorios (`apps/<id>/`) y las
+/// recetas con el mismo `[id]` sobrescriben a las internas, igual que si las
+/// hubiera escrito el usuario a mano.
+pub fn import_dir(paths: &Paths, src: &Path) -> Result<(), String> {
+    if !src.is_dir() {
+        return Err(format!("No es un directorio: {}", src.display()));
+    }
+    fs::create_dir_all(&paths.recipes).map_err(|e| e.to_string())?;
+    let mut files = Vec::new();
+    collect_recipes(src, &mut files, 0);
+    files.sort();
+    let count = files.len();
+    for path in files {
+        let name = path
+            .file_name()
+            .ok_or_else(|| format!("Nombre invalido: {}", path.display()))?;
+        // En community-recipes/apps/<id>/recipe.recipe todos los archivos se
+        // llaman igual: usamos el nombre de la carpeta para no sobrescribirlos.
+        let dest_name = if name == "recipe.recipe" {
+            let parent = path
+                .parent()
+                .and_then(|p| p.file_name())
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_else(|| "recipe".to_string());
+            format!("{parent}.recipe")
+        } else {
+            name.to_string_lossy().to_string()
+        };
+        fs::copy(&path, paths.recipes.join(dest_name))
+            .map_err(|e| format!("No se pudo importar {}: {e}", path.display()))?;
+    }
+    if count == 0 {
+        return Err(format!("No hay archivos .recipe en {}", src.display()));
+    }
+    ui::ok(&format!(
+        "Importadas {count} recetas desde {}",
+        src.display()
+    ));
+    Ok(())
+}
+
+/// Exporta las recetas internas + las del usuario a un directorio
+/// compartible, listo para subir al repositorio comunitario.
+pub fn export_dir(paths: &Paths, dst: &Path) -> Result<(), String> {
+    fs::create_dir_all(dst).map_err(|e| format!("No se pudo crear {}: {e}", dst.display()))?;
+    fs::write(
+        dst.join("core.recipe"),
+        include_str!("../recipes/core.recipe"),
+    )
+    .map_err(|e| format!("No se pudo exportar core.recipe: {e}"))?;
+    let mut count = 1;
+    if let Ok(entries) = fs::read_dir(&paths.recipes) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) != Some("recipe") {
+                continue;
+            }
+            if path.file_name().and_then(|s| s.to_str()) == Some("core.recipe") {
+                continue;
+            }
+            let name = path.file_name().unwrap();
+            fs::copy(&path, dst.join(name))
+                .map_err(|e| format!("No se pudo exportar {}: {e}", path.display()))?;
+            count += 1;
+        }
+    }
+    ui::ok(&format!("Exportadas {count} recetas a {}", dst.display()));
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -387,7 +485,13 @@ mod tests {
 
     #[test]
     fn wildcard() {
-        assert!(wildcard_match("drive_c/windows/system32/msvcp140.dll", "*/system32/*.dll"));
-        assert!(!wildcard_match("drive_c/x/msvcp140.dll", "*/system32/*.dll"));
+        assert!(wildcard_match(
+            "drive_c/windows/system32/msvcp140.dll",
+            "*/system32/*.dll"
+        ));
+        assert!(!wildcard_match(
+            "drive_c/x/msvcp140.dll",
+            "*/system32/*.dll"
+        ));
     }
 }

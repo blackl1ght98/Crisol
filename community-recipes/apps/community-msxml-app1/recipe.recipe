@@ -1,0 +1,9 @@
+# Receta comunitaria: app-msxml
+# Fixture: logs/msxml-install.log
+[community-msxml-app1]
+confidence = 0.84
+priority = 16
+match_log_any = msxml3.dll, msxml6.dll
+action_winetricks = msxml3, msxml6
+action_message = Instalando MSXML 3 y 6 (receta comunitaria)...
+action_retry = true

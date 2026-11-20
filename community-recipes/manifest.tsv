@@ -1,0 +1,7 @@
+id	app	match_log_any	action_winetricks	fixture
+community-vcrun2022-app1	app-vcrun2022	msvcp140.dll, vcruntime140.dll, api-ms-win-crt-runtime-l1-1-0.dll	vcrun2022	logs/vcrun2022-install.log
+community-dotnet48-app1	app-dotnet48	mscorlib.dll, dotnet48, .net framework 4	dotnet48	logs/dotnet48-install.log
+community-d3dx9-app1	app-d3dx9	d3dx9_43.dll, dinput8.dll, xinput1_3.dll	d3dx9, dinput8, xinput	logs/d3dx9-install.log
+community-oleaut32-app1	app-oleaut32	oleaut32.dll, error 0x80040154, class not registered	oleaut32	logs/oleaut32-install.log
+community-msxml-app1	app-msxml	msxml3.dll, msxml6.dll	msxml3, msxml6	logs/msxml-install.log
+community-corefonts-app1	app-corefonts	corefonts, tahoma, times new roman	corefonts	logs/corefonts-install.log

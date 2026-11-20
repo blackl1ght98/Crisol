@@ -1,0 +1,9 @@
+# Receta comunitaria: app-corefonts
+# Fixture: logs/corefonts-install.log
+[community-corefonts-app1]
+confidence = 0.76
+priority = 12
+match_log_any = corefonts, tahoma, times new roman
+action_winetricks = corefonts
+action_message = Instalando fuentes basicas (receta comunitaria)...
+action_retry = true

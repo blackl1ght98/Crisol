@@ -31,7 +31,10 @@ impl Paths {
         let home = env::var_os("HOME")
             .map(PathBuf::from)
             .ok_or_else(|| "HOME no esta definido".to_string())?;
-        let data = xdg_dir("XDG_DATA_HOME", &home.join(".local/share").to_string_lossy());
+        let data = xdg_dir(
+            "XDG_DATA_HOME",
+            &home.join(".local/share").to_string_lossy(),
+        );
         let config = xdg_dir("XDG_CONFIG_HOME", &home.join(".config").to_string_lossy());
         let cache = xdg_dir("XDG_CACHE_HOME", &home.join(".cache").to_string_lossy());
         let data = data.join("crisol");
@@ -40,10 +43,16 @@ impl Paths {
         let runtime = env::var_os("XDG_RUNTIME_DIR").map(PathBuf::from);
 
         Ok(Self {
-            applications: xdg_dir("XDG_DATA_HOME", &home.join(".local/share").to_string_lossy())
-                .join("applications"),
-            icons: xdg_dir("XDG_DATA_HOME", &home.join(".local/share").to_string_lossy())
-                .join("icons/hicolor/scalable/apps"),
+            applications: xdg_dir(
+                "XDG_DATA_HOME",
+                &home.join(".local/share").to_string_lossy(),
+            )
+            .join("applications"),
+            icons: xdg_dir(
+                "XDG_DATA_HOME",
+                &home.join(".local/share").to_string_lossy(),
+            )
+            .join("icons/hicolor/scalable/apps"),
             prefixes: data.join("prefixes"),
             backups: data.join("backups"),
             logs: data.join("logs"),

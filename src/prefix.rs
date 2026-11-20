@@ -45,7 +45,11 @@ pub fn make_id(installer: &Path) -> String {
         .map(|s| s.to_string_lossy().to_string())
         .unwrap_or_else(|| "app".to_string());
     let base = slug(&name);
-    let base = if base.is_empty() { "app".to_string() } else { base };
+    let base = if base.is_empty() {
+        "app".to_string()
+    } else {
+        base
+    };
     let full = installer.to_string_lossy();
     let hash = format!("{:08x}", fnv(&full) & 0xffff_ffff);
     format!("{base}-{hash}")
@@ -59,7 +63,10 @@ pub fn base_env(prefix: &Path, cache: &Path) -> Vec<(String, String)> {
         ("WINEARCH".into(), "win64".into()),
         ("WINEDEBUG".into(), "err+all".into()),
         ("WINEDLLOVERRIDES".into(), "mscoree,mshtml=".into()),
-        ("DXVK_STATE_CACHE_PATH".into(), dxvk.to_string_lossy().to_string()),
+        (
+            "DXVK_STATE_CACHE_PATH".into(),
+            dxvk.to_string_lossy().to_string(),
+        ),
     ]
 }
 

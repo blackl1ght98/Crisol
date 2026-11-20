@@ -43,12 +43,22 @@ fn build_command(opts: &RunOptions, sandbox: bool) -> Option<Command> {
         let bwrap = which("bwrap")?;
         let mut b = Command::new(bwrap);
         b.arg("--die-with-parent")
-            .arg("--ro-bind").arg("/").arg("/")
-            .arg("--dev").arg("/dev")
-            .arg("--proc").arg("/proc")
-            .arg("--bind").arg("/tmp").arg("/tmp")
-            .arg("--bind").arg(opts.prefix).arg(opts.prefix)
-            .arg("--bind").arg(opts.cache).arg(opts.cache);
+            .arg("--ro-bind")
+            .arg("/")
+            .arg("/")
+            .arg("--dev")
+            .arg("/dev")
+            .arg("--proc")
+            .arg("/proc")
+            .arg("--bind")
+            .arg("/tmp")
+            .arg("/tmp")
+            .arg("--bind")
+            .arg(opts.prefix)
+            .arg(opts.prefix)
+            .arg("--bind")
+            .arg(opts.cache)
+            .arg(opts.cache);
         if let Some(rt) = opts.runtime {
             if rt.exists() {
                 b.arg("--bind").arg(rt).arg(rt);
@@ -135,7 +145,11 @@ pub fn run(opts: &RunOptions) -> Result<RunResult, String> {
             thread::sleep(Duration::from_millis(200));
         }
     } else {
-        status = Some(child.wait().map_err(|e| format!("Error esperando a {}: {e}", opts.command))?);
+        status = Some(
+            child
+                .wait()
+                .map_err(|e| format!("Error esperando a {}: {e}", opts.command))?,
+        );
     }
 
     let log = fs::read_to_string(&capture).unwrap_or_default();

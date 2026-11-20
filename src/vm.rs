@@ -55,7 +55,10 @@ pub fn doctor(paths: &Paths) -> Result<(), String> {
     }
 
     if let Ok(cmdline) = fs::read_to_string("/proc/cmdline") {
-        if cmdline.contains("iommu=pt") || cmdline.contains("amd_iommu=on") || cmdline.contains("intel_iommu=on") {
+        if cmdline.contains("iommu=pt")
+            || cmdline.contains("amd_iommu=on")
+            || cmdline.contains("intel_iommu=on")
+        {
             ui::ok("IOMMU habilitado en el kernel (posible GPU passthrough)");
         } else {
             ui::detail("IOMMU no habilitado: añade 'amd_iommu=on iommu=pt' o 'intel_iommu=on iommu=pt' al kernel");
@@ -69,7 +72,10 @@ pub fn doctor(paths: &Paths) -> Result<(), String> {
             let Ok(group) = fs::read_link(path.join("iommu_group")) else {
                 continue;
             };
-            let group = group.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+            let group = group
+                .file_name()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_default();
             let vendor = fs::read_to_string(path.join("vendor")).unwrap_or_default();
             let device = fs::read_to_string(path.join("device")).unwrap_or_default();
             let addr = entry.file_name().to_string_lossy().to_string();
@@ -101,7 +107,8 @@ usermod -aG kvm "$SUDO_USER"
 echo 'Para GPU passthrough añade al arranque: amd_iommu=on iommu=pt  (o intel_iommu=on iommu=pt)'
 echo 'Despues: newgrp kvm  o  cerrar sesion y volver a entrar.'
 "#;
-    fs::write(&script, body).map_err(|e| format!("No se pudo escribir {}: {e}", script.display()))?;
+    fs::write(&script, body)
+        .map_err(|e| format!("No se pudo escribir {}: {e}", script.display()))?;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -166,7 +173,10 @@ pub fn create(
             }
         } else {
             ui::warn("qemu-img no está instalado; crea el disco manualmente:");
-            ui::detail(&format!("qemu-img create -f qcow2 {} {disk_gb}G", disk.display()));
+            ui::detail(&format!(
+                "qemu-img create -f qcow2 {} {disk_gb}G",
+                disk.display()
+            ));
         }
     }
 
@@ -232,9 +242,13 @@ pub fn create(
              done\n\
              echo 'GPU enlazada a vfio-pci'\n"
         );
-        fs::write(&bind, body).map_err(|e| format!("No se pudo escribir {}: {e}", bind.display()))?;
+        fs::write(&bind, body)
+            .map_err(|e| format!("No se pudo escribir {}: {e}", bind.display()))?;
         make_executable(&bind);
-        ui::warn(&format!("GPU passthrough: ejecuta sudo {} antes de arrancar", bind.display()));
+        ui::warn(&format!(
+            "GPU passthrough: ejecuta sudo {} antes de arrancar",
+            bind.display()
+        ));
     }
     make_executable(&start_script);
 

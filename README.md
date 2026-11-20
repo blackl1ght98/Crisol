@@ -47,6 +47,10 @@ crisol recipes              # recetas cargadas (con la confianza actual)
 crisol doctor               # comprobar entorno Wine
 
 crisol panel [--port 8765]  # panel web local de feedback
+crisol feedback stats       # votos y % de acierto por receta
+crisol feedback export [archivo]   # guardar feedback.tsv
+crisol feedback import <archivo>   # importar feedback compartido
+crisol recipes import <dir> | crisol recipes export <dir>   # recetas compartidas
 
 crisol vm doctor            # comprueba QEMU, /dev/kvm, OVMF, IOMMU y PCI
 crisol vm setup             # genera el script para instalar QEMU (requiere sudo)
@@ -117,8 +121,21 @@ Muestra el catálogo, las recetas aplicadas a cada app y la confianza de todas
 las recetas. Los botones **Funcionó** / **No funcionó** cambian el estado de la
 app y suman `+0.05` / `-0.10` a la confianza de esas recetas en
 `~/.config/crisol/feedback.tsv`. La siguiente ejecución de Crisol ya usa esa
-confianza para ordenar las recetas. Escucha solo en `127.0.0.1`: es un servidor
-HTTP mínimo con Rust estándar, en lugar de GTK4 (que no está instalado).
+confianza para ordenar las recetas.
+
+Además guarda un historial en `~/.config/crisol/feedback.log` y muestra dos
+secciones nuevas: **estadísticas** (votos OK/no y % de acierto por receta) y
+**historial reciente**. Puedes descargar el TSV desde `/export` o desde la
+terminal:
+
+```bash
+crisol feedback stats                 # votos por receta
+crisol feedback export compartido.tsv
+crisol feedback import compartido.tsv
+```
+
+Escucha solo en `127.0.0.1`: es un servidor HTTP mínimo con Rust estándar, en
+lugar de GTK4 (que no está instalado).
 
 ## Cómo funciona
 
@@ -183,6 +200,32 @@ action_retry = true
 Ejemplo: crear `~/.config/crisol/recipes/mi-app.recipe` con una solución que
 descubriste, y `crisol repair <id>` la aplicará.
 
+## Recetas compartidas y calidad
+
+El directorio `community-recipes/` es el repositorio comunitario de recetas:
+cada app tiene su carpeta en `apps/<id>/` con un `recipe.recipe` y uno o más
+logs de ejemplo en `logs/`. El `manifest.tsv` relaciona cada receta con la
+cadena que debe aparecer en su log y con la acción winetricks esperada.
+
+```bash
+tools/validate-recipes.sh                  # comprueba receta, log y match
+crisol recipes import community-recipes/apps   # las copia a ~/.config/crisol/recipes
+crisol recipes export /tmp/mis-recetas     # exporta las internas + las tuyas
+```
+
+Esto permite que cualquiera aporte una receta con su log real y que la
+validación automática detecte recetas huérfanas o fixtures que ya no coinciden.
+Las recetas importadas se tratan igual que las del usuario: sobrescriben a las
+internas si repetimos `[id]`, y el panel puede ajustar su confianza.
+
+## Comunidad y contribuciones
+
+- `docs/CONTRIBUTING.md`: cómo abrir issues, añadir recetas y enviar PRs.
+- `docs/UPSTREAM.md`: borradores de colaboración con winetricks, Bottles y Lutris (aún no enviados).
+- `.github/workflows/ci.yml` + `tests/integration.sh`: `cargo test`, build y prueba de extremo a extremo en cada PR.
+- `packaging/`: `PKGBUILD` de Arch, spec de Fedora y manifiesto Flatpak (experimentales).
+- `LICENSE`: MIT.
+
 ## Límites honestos
 
 * Los clics se reducen mucho con los argumentos silenciosos, pero **no se eliminan
@@ -206,6 +249,8 @@ cargo test
 cargo run -- doctor
 cargo run -- vm doctor
 cargo build --release
+bash tests/integration.sh
+tools/validate-recipes.sh
 ```
 
 El proyecto usa **solo la biblioteca estándar** de Rust: no hay crates que
