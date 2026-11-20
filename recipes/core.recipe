@@ -1,0 +1,129 @@
+# Recetas base de Crisol.
+# Formato: clave = valor. Las listas van separadas por comas. '#' comenta.
+# Un match_log_any se cumple si aparece CUALQUIERA de sus valores (ignore case).
+# Un match_log_contains se cumple solo si aparece ese valor exacto.
+# Todas las claves de match se combinan con AND.
+
+[missing-vcrun2022]
+confidence = 0.95
+priority = 20
+match_log_any = msvcp140.dll, vcruntime140.dll, msvcr120.dll, api-ms-win-crt-runtime-l1-1-0.dll, concrt140.dll
+action_winetricks = vcrun2022
+action_message = Instalando Visual C++ 2022 (vcrun2022)...
+action_retry = true
+
+[missing-vcrun2010]
+confidence = 0.90
+priority = 18
+match_log_any = msvcr100.dll, msvcp100.dll, atl100.dll
+action_winetricks = vcrun2010
+action_message = Instalando Visual C++ 2010...
+action_retry = true
+
+[missing-vcrun2008]
+confidence = 0.88
+priority = 17
+match_log_any = msvcr90.dll, msvcp90.dll, atl90.dll
+action_winetricks = vcrun2008
+action_retry = true
+
+[missing-dotnet48]
+confidence = 0.90
+priority = 19
+match_log_any = .net framework 4, dotnet48, mscorlib.dll, system.runtime.dll, unhandled exception: system.io
+action_winetricks = dotnet48
+action_message = Instalando .NET Framework 4.8...
+action_retry = true
+
+[missing-dotnet35]
+confidence = 0.80
+priority = 15
+match_log_any = .net framework 3.5, dotnet35, system.core.dll
+action_winetricks = dotnet35sp1
+action_message = Instalando .NET Framework 3.5...
+action_retry = true
+
+[missing-d3dx]
+confidence = 0.88
+priority = 17
+match_log_any = d3dx9_43.dll, d3dx10_43.dll, d3dx11_43.dll, dinput8.dll, xinput1_3.dll
+action_winetricks = d3dx9, dinput8, xinput
+action_message = Instalando bibliotecas DirectX (d3dx9/dinput8/xinput)...
+action_retry = true
+
+[try-dxvk]
+confidence = 0.45
+priority = 5
+match_log_any = d3d11.dll, dxgi_error, vkd3d-proton, vulkan is not available
+action_winetricks = dxvk
+action_message = Activando DXVK (Direct3D 11 -> Vulkan)...
+action_retry = true
+
+[missing-oleaut32]
+confidence = 0.80
+priority = 14
+match_log_any = oleaut32.dll
+action_override = oleaut32=native
+action_retry = true
+
+[missing-mshtml]
+confidence = 0.80
+priority = 14
+match_log_any = mshtml.dll, htmlfile, ieframe.dll
+action_override = mshtml=native
+action_retry = true
+
+[missing-msxml]
+confidence = 0.78
+priority = 13
+match_log_any = msxml3.dll, msxml4.dll, msxml6.dll
+action_winetricks = msxml3, msxml6
+action_retry = true
+
+[missing-gdiplus]
+confidence = 0.78
+priority = 13
+match_log_any = gdiplus.dll
+action_winetricks = gdiplus
+action_retry = true
+
+[missing-atl]
+confidence = 0.75
+priority = 12
+match_log_any = atl80.dll, atl110.dll
+action_winetricks = atl80, atl110
+action_retry = true
+
+[missing-corefonts]
+confidence = 0.70
+priority = 10
+match_log_any = corefonts, arial, times new roman, tahoma
+action_winetricks = corefonts
+action_message = Instalando fuentes basicas de Windows...
+action_retry = true
+
+[arch-mismatch]
+confidence = 0.75
+priority = 16
+match_log_any = not a valid win32 application, bad exe format, is not a valid application
+action_reset_prefix = true
+action_env = WINEARCH=win64
+action_message = Reiniciando el prefijo en modo win64...
+action_retry = true
+
+[msi-network-path]
+confidence = 0.70
+priority = 12
+match_log_any = could not access network location, error 2203
+action_reset_prefix = true
+action_env = WINEDEBUG=-all
+action_message = Reiniciando el prefijo y silenciando el log de MSI...
+action_retry = true
+
+[mono-gecko-prompt]
+confidence = 0.65
+priority = 11
+match_log_any = wine mono, wine-gecko, gecko installer, mono-2.0
+action_env = WINEDLLOVERRIDES=mscoree,mshtml=
+action_message = Desactivando los asistentes de Mono/Gecko...
+action_retry = true
