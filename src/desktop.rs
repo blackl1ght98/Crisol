@@ -27,19 +27,40 @@ fn default_icon(paths: &Paths) -> Result<PathBuf, String> {
     Ok(icon)
 }
 
-/// Registra Crisol como aplicación por defecto para .exe y .msi.
+/// Registra dos entradas: un lanzador visible (`crisol.desktop`, abre el panel)
+/// y un manejador oculto (`crisol-handler.desktop`) para el doble clic.
+/// Antes había una sola entrada con `%f`: al abrirla desde el menú no recibía
+/// archivo, ejecutaba `--handler` sin argumentos y parecía que no abría nada.
 pub fn setup(paths: &Paths) -> Result<(), String> {
     let bin = current_bin()?;
     let icon = default_icon(paths)?;
-    let desktop = paths.applications.join("crisol.desktop");
-    let content = format!(
+    let launcher = paths.applications.join("crisol.desktop");
+    let launcher_content = format!(
         "[Desktop Entry]\n\
          Type=Application\n\
          Name=Crisol\n\
+         Comment=Panel de aplicaciones y recetas de Crisol\n\
+         Exec=\"{}\" app\n\
+         Icon={}\n\
+         Terminal=false\n\
+         Categories=System;Utility;\n\
+         StartupNotify=true\n",
+        bin.display(),
+        icon.display()
+    );
+    fs::write(&launcher, launcher_content)
+        .map_err(|e| format!("No se pudo escribir {}: {e}", launcher.display()))?;
+
+    let handler = paths.applications.join("crisol-handler.desktop");
+    let handler_content = format!(
+        "[Desktop Entry]\n\
+         Type=Application\n\
+         Name=Crisol (instalar con doble clic)\n\
          Comment=Instala ejecutables de Windows como si fuesen nativos\n\
          Exec=\"{}\" --handler %f\n\
          Icon={}\n\
          Terminal=true\n\
+         NoDisplay=true\n\
          MimeType={};\n\
          Categories=System;Utility;\n\
          StartupNotify=true\n",
@@ -47,12 +68,12 @@ pub fn setup(paths: &Paths) -> Result<(), String> {
         icon.display(),
         MIMES.join(";")
     );
-    fs::write(&desktop, content)
-        .map_err(|e| format!("No se pudo escribir {}: {e}", desktop.display()))?;
+    fs::write(&handler, handler_content)
+        .map_err(|e| format!("No se pudo escribir {}: {e}", handler.display()))?;
 
     for mime in MIMES {
         let _ = Command::new("xdg-mime")
-            .args(["default", "crisol.desktop", mime])
+            .args(["default", "crisol-handler.desktop", mime])
             .status();
     }
     if let Some(cmd) = which("update-desktop-database") {
@@ -61,7 +82,7 @@ pub fn setup(paths: &Paths) -> Result<(), String> {
             .status();
     }
     crate::ui::ok(&format!(
-        "Registrado como manejador de: {}",
+        "Lanzador y manejador registrados. Doble clic para: {}",
         MIMES.join(", ")
     ));
     Ok(())

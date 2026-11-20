@@ -43,13 +43,19 @@ impl Default for Options {
 
 #[derive(Clone, Debug)]
 pub enum Command {
+    Version,
+    App(u16),
+    Completions(String),
     Install(PathBuf, Options),
     Launch(String),
     List,
+    ListJson,
     Remove(String),
     Repair(String),
     Doctor,
+    DoctorJson,
     Recipes,
+    RecipesJson,
     SetupDesktop,
     Handler(PathBuf, Options),
     VmDoctor,
@@ -72,6 +78,7 @@ pub enum Command {
     FeedbackExport(Option<PathBuf>),
     FeedbackImport(PathBuf),
     FeedbackStats,
+    FeedbackStatsJson,
     RecipeImport(PathBuf),
     RecipeExport(PathBuf),
     Help,
@@ -84,6 +91,7 @@ pub fn parse(args: Vec<String>) -> Command {
 
     let mut opts = Options::default();
     let mut positional: Vec<String> = Vec::new();
+    let mut json = false;
     let mut i = 0;
     while i < args.len() {
         let a = &args[i];
@@ -156,6 +164,8 @@ pub fn parse(args: Vec<String>) -> Command {
                     opts.exe = Some(v.replace('\\', "/"));
                 }
             }
+            "--version" | "-V" => return Command::Version,
+            "--json" => json = true,
             "--help" | "-h" | "help" => return Command::Help,
             s if s.starts_with('-') => {
                 eprintln!("flag desconocida: {s}");
@@ -211,7 +221,13 @@ pub fn parse(args: Vec<String>) -> Command {
                 Some(p) => Command::FeedbackImport(PathBuf::from(p)),
                 None => Command::Help,
             },
-            "" | "stats" => Command::FeedbackStats,
+            "" | "stats" => {
+                if json {
+                    Command::FeedbackStatsJson
+                } else {
+                    Command::FeedbackStats
+                }
+            }
             _ => Command::Help,
         };
     }
@@ -226,7 +242,13 @@ pub fn parse(args: Vec<String>) -> Command {
                 Some(p) => Command::RecipeExport(PathBuf::from(p)),
                 None => Command::Help,
             },
-            "" | "list" => Command::Recipes,
+            "" | "list" => {
+                if json {
+                    Command::RecipesJson
+                } else {
+                    Command::Recipes
+                }
+            }
             _ => Command::Help,
         };
     }
@@ -243,12 +265,32 @@ pub fn parse(args: Vec<String>) -> Command {
             Some(p) => Command::Install(PathBuf::from(p), opts),
             None => Command::Help,
         },
+        "app" | "ui" => Command::App(opts.port),
+        "completions" => arg.map(Command::Completions).unwrap_or(Command::Help),
         "launch" | "run" => arg.map(Command::Launch).unwrap_or(Command::Help),
         "remove" | "rm" | "uninstall" => arg.map(Command::Remove).unwrap_or(Command::Help),
         "repair" => arg.map(Command::Repair).unwrap_or(Command::Help),
-        "list" | "ls" => Command::List,
-        "doctor" => Command::Doctor,
-        "recipes" => Command::Recipes,
+        "list" | "ls" => {
+            if json {
+                Command::ListJson
+            } else {
+                Command::List
+            }
+        }
+        "doctor" => {
+            if json {
+                Command::DoctorJson
+            } else {
+                Command::Doctor
+            }
+        }
+        "recipes" => {
+            if json {
+                Command::RecipesJson
+            } else {
+                Command::Recipes
+            }
+        }
         "setup-desktop" => Command::SetupDesktop,
         "panel" => Command::Panel(opts.port),
         _ => Command::Help,
@@ -272,13 +314,15 @@ pub fn print_help() {
            crisol vm setup                Genera el script para instalar QEMU (sudo)\n\
            crisol vm create <vm> --iso ISO [--ram N] [--disk N] [--gpu-pci ADDR]\n\
            crisol vm list | vm start <vm> | vm install <vm> <archivo>\n\
-           crisol panel [--port 8765]          Panel web local de feedback\n\
+           crisol app [--port 8765]            Abre el panel en el navegador\n\
+            crisol panel [--port 8765]          Panel web local de feedback\n\
            crisol feedback stats               Votos y tasa de acierto por receta\n\
            crisol feedback export [archivo]    Exportar feedback.tsv\n\
            crisol feedback import <archivo>    Importar un feedback compartido\n\
            crisol recipes import <dir>         Importar recetas compartidas\n\
            crisol recipes export <dir>         Exportar recetas a un directorio\n\
            crisol --handler <archivo>     Modo interno para el gestor de archivos\n\
+           crisol completions <shell>     Genera completions (bash|zsh|fish)\n\
          \n\
          OPCIONES\n\
            --no-sandbox       No usar bubblewrap (por si falla)\n\
@@ -290,6 +334,8 @@ pub fn print_help() {
            --vm               Pasar el instalador directamente a la VM de Windows\n\
            --vm-fallback      Si Wine falla, pasar automaticamente a la VM\n\
            --port N           Puerto del panel local (por defecto 8765)\n\
+           --json             Salida JSON en list/doctor/recipes/feedback stats\n\
+           --version          Muestra la version\n\
            --yes              No pedir confirmacion\n\
          \n\
          EJEMPLOS\n\
@@ -297,4 +343,22 @@ pub fn print_help() {
            crisol install juego.exe --engine wine-ge --attempts 7\n\
            crisol launch programa-a1b2c3\n"
     );
+}
+
+/// Genera un script de completions estático (sin dependencias).
+pub fn print_completions(shell: &str) {
+    let cmds = "install launch list recipes doctor app panel feedback vm setup-desktop repair remove completions help";
+    let flags = "--no-sandbox --yes --interactive --vm --vm-fallback --iso --disk --ram --cpus --gpu-pci --port --attempts --engine --timeout --exe --json --version --help";
+    match shell {
+        "bash" => println!(
+            "_crisol() {{\n  local cur=\"${{COMP_WORDS[COMP_CWORD]}}\"\n  COMPREPLY=( $(compgen -W \"{cmds} {flags}\" -- \"$cur\") )\n}}\ncomplete -F _crisol crisol\n"
+        ),
+        "zsh" => println!(
+            "#compdef crisol\n_arguments '1: :({cmds})' '*:: :->args'\n"
+        ),
+        "fish" => println!(
+            "complete -c crisol -f\ncomplete -c crisol -n '__fish_use_subcommand' -a '{cmds}'\ncomplete -c crisol -a '{flags}'\n"
+        ),
+        _ => println!("Shell no soportado: {shell} (usa bash, zsh o fish)"),
+    }
 }

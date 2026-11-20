@@ -6,27 +6,41 @@ de Rust: cualquier mejora en recetas, documentación o empaquetado es bienvenida
 ## 1. Abrir un issue antes de crear nada grande
 
 1. Busca issues abiertos y cerrados para no duplicar.
-2. Usa la plantilla de **error** o de **petición de funcionalidad**.
+2. Usa la plantilla de **error**, de **petición de funcionalidad** o, si aportas
+   una instalación real, la plantilla **`receta-real`**
+   (`.github/ISSUE_TEMPLATE/receta-real.md`).
 3. Incluye: versión o commit de Crisol, distribución, versiones de Wine y
    winetricks, el comando exacto ejecutado, el log relevante y el
    comportamiento esperado frente al real.
 4. **No pegues logs con datos personales**: nombres de usuario, rutas absolutas
    de tu casa, nombres de archivos privados, claves, tokens ni información de
-   clientes. Sustituye eso por marcadores como `<USUARIO>` o `<RUTA>`. Los logs
-   de Crisol están en `~/.local/share/crisol/logs/<id>-<intentos>.log`.
+   clientes. Pásalos por `tools/redact-log.sh` y revisa el resultado; la
+   herramienta conserva las líneas de Wine pero no detecta nombres propios ni
+   hostnames. Los logs de Crisol están en
+   `~/.local/share/crisol/logs/<id>-<intentos>.log`.
+5. **Se priorizan los logs reales sobre las recetas especulativas.** Consulta
+   `community-recipes/REAL-LOGS.md`: los 6 fixtures actuales son ejemplos
+   anonimizados y no cuentan como evidencia. El objetivo es llegar a 20 recetas
+   con logs reales verificados.
 
 ## 2. Añadir una receta de la comunidad
 
 Las recetas compartidas viven en `community-recipes/apps/<id>/`, donde `<id>`
 es el mismo valor del `[id]` del DSL, en minúsculas con guiones y **empieza por
-`community-`** (por ejemplo `community-recipes/apps/community-mi-app/`). Crea ahí:
+`community-`** (por ejemplo `community-recipes/apps/community-mi-app/`). Puedes
+crear el esqueleto con `tools/new-recipe.sh community-mi-app`: genera la
+receta y un `logs/<id>.log` con **solo comentarios**, nunca líneas de log
+inventadas, e imprime la fila que debes añadir al manifest (no lo modifica).
+Crea ahí:
 
 * `recipe.recipe`: la receta en el DSL descrito abajo (con `confidence`,
   `priority`, `match_log_any`, `action_winetricks`, `action_message` y
   `action_retry` como mínimo).
-* `logs/<fixture>.log`: fragmento realista de 10-30 líneas del log de Wine que
-  disparó la receta, **anonimizado** (usa nombres genéricos de aplicación; nada
-  de usuarios, rutas personales ni datos de terceros).
+* `logs/<fixture>.log`: fragmento **real** de 10-30 líneas del log de Wine que
+  disparó la receta, **redactado con `tools/redact-log.sh` y revisado a mano**
+  (usa nombres genéricos de aplicación; nada de usuarios, rutas personales, IPs,
+  MACs, claves ni datos de terceros). Los 6 fixtures actuales son sintéticos y
+  anonimizados: no los presentes como logs reales ni los copies como prueba.
 
 Después añade una fila a `community-recipes/manifest.tsv` con cinco columnas
 separadas por TAB: `id`, `app`, `match_log_any`, `action_winetricks`, `fixture`.
@@ -102,7 +116,11 @@ tools/validate-recipes.sh
 `tools/validate-recipes.sh` valida `community-recipes/manifest.tsv`: comprueba
 que existen la receta y su fixture, que el log contiene las cadenas de
 `match_log_any` y que la receta declara el `action_winetricks` anunciado.
-Además, `cargo test` cubre el parser y el emparejamiento de recetas.
+Además, `cargo test` cubre el parser y el emparejamiento de recetas. Para
+aportaciones con logs, comprueba también que el fragmento pasó por
+`tools/redact-log.sh`, que no quedan datos personales y que hay consentimiento
+de publicación (lo recoge la plantilla `receta-real` y el
+`.github/PULL_REQUEST_TEMPLATE.md`).
 
 Si tocas código, el CI (`.github/workflows/ci.yml`) también ejecuta
 `cargo fmt --all -- --check`, `cargo clippy -- -D warnings` y

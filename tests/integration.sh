@@ -108,6 +108,16 @@ fi
 grep -q 'Crisol' "$TMP_ROOT/index.html" || fail "GET / no contiene 'Crisol'"
 ok "GET / -> HTTP 200 y contiene 'Crisol'"
 
+TOKEN_FILE="$XDG_CONFIG_HOME/crisol/panel.token"
+[[ -s "$TOKEN_FILE" ]] || fail "no se generó el token del panel en $TOKEN_FILE"
+PANEL_TOKEN="$(tr -d '[:space:]' < "$TOKEN_FILE")"
+ok "token del panel generado"
+
+csrf_code="$(curl -sS -o "$TMP_ROOT/csrf.body" -w '%{http_code}' --max-time 2 \
+  "$BASE/ok?id=app-ci" 2>/dev/null || true)"
+[[ "$csrf_code" == "403" ]] || fail "voto sin token devolvió '$csrf_code' (esperado 403)"
+ok "voto sin token rechazado con HTTP 403"
+
 # ---------------------------------------------------------------------------
 # Feedback: /ok suma 0.05 y /bad resta (0.05/0.10 según versión).
 # ---------------------------------------------------------------------------
@@ -115,7 +125,7 @@ send_feedback() {
   local route="$1"
   local code
   code="$(curl -sS -o "$TMP_ROOT/$route.body" -w '%{http_code}' --max-time 2 \
-    "$BASE/$route?id=app-ci" 2>/dev/null || true)"
+    "$BASE/$route?id=app-ci&t=$PANEL_TOKEN" 2>/dev/null || true)"
   [[ "$code" == "302" || "$code" == "200" ]] || \
     fail "GET /$route?id=app-ci devolvió '${code:-sin respuesta}'"
 }
@@ -168,4 +178,22 @@ else
   info "crisol recipes import no implementado; se omite"
 fi
 
+# CLI moderna: versión, JSON y completions.
+version="$("$BIN" --version)"
+[[ "$version" == crisol\ * ]] || fail "--version devolvió '$version'"
+ok "--version -> $version"
+
+for cmd in list doctor recipes "feedback stats"; do
+  out="$("$BIN" --json $cmd 2>&1)" || fail "--json $cmd falló"
+  python3 -c 'import json,sys; json.load(sys.stdin)' <<<"$out" || fail "--json $cmd no es JSON válido"
+done
+ok "--json produce JSON válido en list/doctor/recipes/feedback stats"
+
+for shell in bash zsh fish; do
+  out="$("$BIN" completions "$shell" 2>&1)" || fail "completions $shell falló"
+  [[ -n "$out" ]] || fail "completions $shell está vacío"
+done
+ok "completions bash/zsh/fish generados"
+
 printf '\n==> Integración completada correctamente\n'
+

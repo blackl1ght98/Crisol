@@ -3,6 +3,7 @@ mod cli;
 mod desktop;
 mod detector;
 mod engine;
+mod json;
 mod panel;
 mod paths;
 mod peicon;
@@ -17,9 +18,20 @@ use paths::Paths;
 
 fn main() {
     let cmd = cli::parse(std::env::args().skip(1).collect());
-    if matches!(cmd, Command::Help) {
-        cli::print_help();
-        return;
+    match &cmd {
+        Command::Help => {
+            cli::print_help();
+            return;
+        }
+        Command::Version => {
+            println!("crisol {}", env!("CARGO_PKG_VERSION"));
+            return;
+        }
+        Command::Completions(shell) => {
+            cli::print_completions(shell);
+            return;
+        }
+        _ => {}
     }
 
     let paths = match Paths::new() {
@@ -35,7 +47,8 @@ fn main() {
     }
 
     let code = match cmd {
-        Command::Help => 0,
+        Command::Help | Command::Version | Command::Completions(_) => 0,
+        Command::App(port) => result_code(panel::open_app(&paths, port)),
         Command::Install(path, opts) if opts.vm => result_code(vm::handoff(&paths, &path)),
         Command::Install(path, opts) => match engine::install(&paths, &opts, &path) {
             Ok(report) => {
@@ -83,10 +96,13 @@ fn main() {
             }
         },
         Command::List => result_code(engine::list(&paths)),
+        Command::ListJson => result_code(engine::list_json(&paths)),
         Command::Remove(id) => result_code(engine::remove(&paths, &id)),
         Command::Repair(id) => result_code(engine::repair(&paths, &id)),
         Command::Doctor => result_code(engine::doctor(&paths)),
+        Command::DoctorJson => result_code(engine::doctor_json(&paths)),
         Command::Recipes => result_code(engine::show_recipes(&paths)),
+        Command::RecipesJson => result_code(engine::show_recipes_json(&paths)),
         Command::SetupDesktop => result_code(desktop::setup(&paths)),
         Command::VmDoctor => result_code(vm::doctor(&paths)),
         Command::VmSetup => result_code(vm::setup(&paths)),
@@ -115,6 +131,7 @@ fn main() {
         }
         Command::FeedbackImport(path) => result_code(panel::import_feedback(&paths, &path)),
         Command::FeedbackStats => result_code(panel::show_stats(&paths)),
+        Command::FeedbackStatsJson => result_code(panel::stats_json(&paths)),
         Command::RecipeImport(dir) => result_code(recipe::import_dir(&paths, &dir)),
         Command::RecipeExport(dir) => result_code(recipe::export_dir(&paths, &dir)),
     };

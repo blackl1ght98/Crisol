@@ -1,5 +1,10 @@
 # Crisol
 
+[![CI](https://github.com/blackl1ght98/Crisol/actions/workflows/ci.yml/badge.svg)](https://github.com/blackl1ght98/Crisol/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/blackl1ght98/Crisol?include_prereleases)](https://github.com/blackl1ght98/Crisol/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Español](https://img.shields.io/badge/docs-español-green.svg)](README.md) [![English](https://img.shields.io/badge/docs-english-blue.svg)](README.en.md)
+
 Capa de orquestación de compatibilidad que va **más allá de Wine** sin reescribirlo.
 Wine es el motor; Crisol es el mecánico: decide qué versión usar, crea un prefijo
 aislado, instala dependencias, detecta fallos en el log, aplica recetas, reintenta
@@ -46,11 +51,16 @@ crisol remove <id>          # borrar app y prefijo
 crisol recipes              # recetas cargadas (con la confianza actual)
 crisol doctor               # comprobar entorno Wine
 
-crisol panel [--port 8765]  # panel web local de feedback
+crisol app                  # abre Crisol: arranca el panel y lo abre en el navegador
+crisol panel [--port 8765]  # solo el servidor del panel web local
 crisol feedback stats       # votos y % de acierto por receta
 crisol feedback export [archivo]   # guardar feedback.tsv
 crisol feedback import <archivo>   # importar feedback compartido
 crisol recipes import <dir> | crisol recipes export <dir>   # recetas compartidas
+
+crisol --version            # versión
+crisol --json list          # salida JSON para scripts (también doctor/recipes/feedback stats)
+crisol completions bash     # scripts de completions: bash, zsh, fish
 
 crisol vm doctor            # comprueba QEMU, /dev/kvm, OVMF, IOMMU y PCI
 crisol vm setup             # genera el script para instalar QEMU (requiere sudo)
@@ -64,6 +74,13 @@ crisol vm install windows programa.exe
 
 Doble clic en un `.exe`/`.msi` → se abre una terminal → Crisol instala,
 repara y crea el acceso directo con `crisol launch <id>`.
+
+`crisol setup-desktop` instala **dos** entradas: `Crisol` (lanzador visible que
+ejecuta `crisol app`) y `Crisol (instalar con doble clic)` (manejador oculto de
+`.exe`/`.msi`). Antes había una sola entrada con `%f`: al abrirla desde el menú
+no recibía archivo y terminaba enseguida, que era el fallo que hacía pensar que
+"la app no abría". Si ya tenías el menú abierto, vuelve a ejecutar
+`crisol setup-desktop` para actualizarlo.
 
 ## Instalación silenciosa e iconos
 
@@ -113,8 +130,9 @@ garantizar.
 ## Panel de feedback
 
 ```bash
+crisol app              # arranca el panel y abre el navegador (lo que hace el menú)
 crisol panel --port 8765
-# abrir http://127.0.0.1:8765
+# o abre http://127.0.0.1:8765
 ```
 
 Muestra el catálogo, las recetas aplicadas a cada app y la confianza de todas
@@ -135,7 +153,10 @@ crisol feedback import compartido.tsv
 ```
 
 Escucha solo en `127.0.0.1`: es un servidor HTTP mínimo con Rust estándar, en
-lugar de GTK4 (que no está instalado).
+lugar de GTK4 (que no está instalado). La primera vez genera un token en
+`~/.config/crisol/panel.token`; `/ok`, `/bad` y `/export` lo exigen y las peticiones
+con `Origin` ajeno se rechazan con 403, para que una web no pueda votar por ti.
+Detalles en `docs/SECURITY.md`.
 
 ## Cómo funciona
 
@@ -204,8 +225,11 @@ descubriste, y `crisol repair <id>` la aplicará.
 
 El directorio `community-recipes/` es el repositorio comunitario de recetas:
 cada app tiene su carpeta en `apps/<id>/` con un `recipe.recipe` y uno o más
-logs de ejemplo en `logs/`. El `manifest.tsv` relaciona cada receta con la
-cadena que debe aparecer en su log y con la acción winetricks esperada.
+logs de ejemplo en `logs/`. **Los 6 fixtures actuales son ejemplos anonimizados,
+no evidencia de instalaciones reales**: `community-recipes/REAL-LOGS.md` explica
+cómo aportar logs reales redactados (objetivo: 20 recetas verificadas). El
+`manifest.tsv` relaciona cada receta con la cadena que debe aparecer en su log y
+con la acción winetricks esperada.
 
 ```bash
 tools/validate-recipes.sh                  # comprueba receta, log y match
@@ -220,10 +244,15 @@ internas si repetimos `[id]`, y el panel puede ajustar su confianza.
 
 ## Comunidad y contribuciones
 
+- `community-recipes/REAL-LOGS.md`: campaña de logs reales y redacción de datos personales.
 - `docs/CONTRIBUTING.md`: cómo abrir issues, añadir recetas y enviar PRs.
+- `docs/SECURITY.md`: modelo de seguridad del panel, `bwrap` y VMs.
+- `docs/VM.md`: requisitos y solución de problemas de QEMU/KVM.
 - `docs/UPSTREAM.md`: borradores de colaboración con winetricks, Bottles y Lutris (aún no enviados).
+- `CHANGELOG.md` y `ROADMAP.md`: historial y prioridades.
 - `.github/workflows/ci.yml` + `tests/integration.sh`: `cargo test`, build y prueba de extremo a extremo en cada PR.
-- `packaging/`: `PKGBUILD` de Arch, spec de Fedora y manifiesto Flatpak (experimentales).
+- `packaging/`: `PKGBUILD` de Arch, spec de Fedora y manifiesto Flatpak (verificación estática; paquetes no construidos aquí).
+- `README.en.md`: resumen en inglés.
 - `LICENSE`: MIT.
 
 ## Límites honestos

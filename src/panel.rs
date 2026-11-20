@@ -9,9 +9,13 @@ use crate::ui;
 use std::collections::BTreeMap;
 use std::fs;
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
+use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::process::{Command as ProcessCommand, Stdio};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+#[cfg(unix)]
+use std::os::unix::process::CommandExt;
 
 fn escape(text: &str) -> String {
     text.chars()
@@ -31,6 +35,67 @@ fn feedback_path(paths: &Paths) -> PathBuf {
 
 fn history_path(paths: &Paths) -> PathBuf {
     paths.config.join("feedback.log")
+}
+
+fn token_path(paths: &Paths) -> PathBuf {
+    paths.config.join("panel.token")
+}
+
+/// Token local para que un sitio web no pueda enviar votos al panel (CSRF).
+/// Se genera una sola vez y se guarda con permisos de usuario.
+fn panel_token(paths: &Paths) -> Result<String, String> {
+    let path = token_path(paths);
+    if let Ok(text) = fs::read_to_string(&path) {
+        let value = text.trim();
+        if value.len() >= 16 {
+            return Ok(value.to_string());
+        }
+    }
+    let mut bytes = [0u8; 32];
+    let seeded = fs::File::open("/dev/urandom")
+        .and_then(|mut f| f.read_exact(&mut bytes))
+        .is_ok();
+    if !seeded {
+        let seed = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        bytes
+            .iter_mut()
+            .enumerate()
+            .for_each(|(i, b)| *b = ((seed >> ((i % 8) * 8)) ^ (i as u128 * 31)) as u8);
+    }
+    let value: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+    fs::write(&path, &value).map_err(|e| format!("No se pudo guardar el token del panel: {e}"))?;
+    Ok(value)
+}
+
+fn token_from_query(query: &str, key: &str) -> Option<String> {
+    query
+        .split('&')
+        .find_map(|part| part.strip_prefix(&format!("{key}=")))
+        .map(|s| s.replace("%20", " "))
+}
+
+fn origin_ok(request: &str, port: u16) -> bool {
+    let allowed = [
+        format!("http://127.0.0.1:{port}"),
+        format!("http://localhost:{port}"),
+    ];
+    for line in request.lines() {
+        if let Some(value) = line.strip_prefix("Origin:") {
+            let origin = value.trim().trim_end_matches('/');
+            if !allowed.iter().any(|a| a == origin) {
+                return false;
+            }
+        }
+        if line.to_ascii_lowercase().starts_with("sec-fetch-site:")
+            && line.to_ascii_lowercase().contains("cross-site")
+        {
+            return false;
+        }
+    }
+    true
 }
 
 fn load_feedback(paths: &Paths) -> Vec<(String, f32)> {
@@ -225,21 +290,46 @@ pub fn show_stats(paths: &Paths) -> Result<(), String> {
     Ok(())
 }
 
-fn html(paths: &Paths) -> String {
+/// Estadísticas en JSON para scripts.
+pub fn stats_json(paths: &Paths) -> Result<(), String> {
+    let rows = stats(paths)
+        .iter()
+        .map(|r| {
+            let total = r.ok + r.bad;
+            let pct = if total == 0 {
+                0.0
+            } else {
+                r.ok as f32 * 100.0 / total as f32
+            };
+            format!(
+                "{{\"id\":{},\"ok\":{},\"bad\":{},\"pct\":{:.0}}}",
+                crate::json::quote(&r.id),
+                r.ok,
+                r.bad,
+                pct
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    println!("{{\"recipes\":[{rows}]}}");
+    Ok(())
+}
+
+fn html(paths: &Paths, token: &str) -> String {
     let apps = catalog::load(&paths.catalog);
     let recipes = recipe::parse_all(include_str!("../recipes/core.recipe"), &paths.recipes);
     let stats = stats(paths);
     let history = load_history(paths);
-    let mut page = String::from(
+    let mut page = format!(
         "<!doctype html><html lang='es'><head><meta charset='utf-8'>\
          <title>Crisol · panel</title><style>\
-         body{font:14px system-ui,sans-serif;background:#0f172a;color:#e2e8f0;margin:2rem;max-width:960px}\
-         h1{color:#38bdf8}h2{margin-top:2rem;border-bottom:1px solid #334155;padding-bottom:.3rem}\
-         table{border-collapse:collapse;width:100%}td,th{padding:.5rem;border-bottom:1px solid #1e293b;text-align:left}\
-         a{color:#4ade80;text-decoration:none;margin-right:.6rem}a.bad{color:#f87171}\
-         .muted{color:#94a3b8}code{color:#fbbf24}</style></head><body>\
+         body{{font:14px system-ui,sans-serif;background:#0f172a;color:#e2e8f0;margin:2rem;max-width:960px}}\
+         h1{{color:#38bdf8}}h2{{margin-top:2rem;border-bottom:1px solid #334155;padding-bottom:.3rem}}\
+         table{{border-collapse:collapse;width:100%}}td,th{{padding:.5rem;border-bottom:1px solid #1e293b;text-align:left}}\
+         a{{color:#4ade80;text-decoration:none;margin-right:.6rem}}a.bad{{color:#f87171}}\
+         .muted{{color:#94a3b8}}code{{color:#fbbf24}}</style></head><body>\
          <h1>Crisol</h1><p class='muted'>Panel local de apps y recetas. Escuchar solo en 127.0.0.1.</p>\
-         <p><a href='/export'>Descargar feedback.tsv</a> · <code>crisol feedback stats</code></p>",
+         <p><a href='/export?t={token}'>Descargar feedback.tsv</a> · <code>crisol feedback stats</code></p>",
     );
     page.push_str("<h2>Aplicaciones instaladas</h2>");
     if apps.is_empty() {
@@ -249,13 +339,15 @@ fn html(paths: &Paths) -> String {
         for app in apps {
             page.push_str(&format!(
                 "<tr><td>{}</td><td><code>{}</code></td><td>{}</td><td class='muted'>{}</td>\
-                 <td><a href='/ok?id={}'>✔ Funcionó</a><a class='bad' href='/bad?id={}'>✘ No funcionó</a></td></tr>",
+                 <td><a href='/ok?id={}&amp;t={}'>✔ Funcionó</a><a class='bad' href='/bad?id={}&amp;t={}'>✘ No funcionó</a></td></tr>",
                 escape(&app.name),
                 escape(&app.id),
                 escape(&app.last_status),
                 escape(&app.recipes),
                 escape(&app.id),
-                escape(&app.id)
+                token,
+                escape(&app.id),
+                token
             ));
         }
         page.push_str("</table>");
@@ -319,7 +411,7 @@ fn html(paths: &Paths) -> String {
 
 fn respond(stream: &mut TcpStream, status: &str, content_type: &str, body: &str) {
     let header = format!(
-        "HTTP/1.1 {status}\r\nContent-Type: {content_type}; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+        "HTTP/1.1 {status}\r\nContent-Type: {content_type}; charset=utf-8\r\nContent-Length: {}\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n",
         body.len()
     );
     let _ = stream.write_all(header.as_bytes());
@@ -327,21 +419,39 @@ fn respond(stream: &mut TcpStream, status: &str, content_type: &str, body: &str)
     let _ = stream.flush();
 }
 
-fn handle(stream: &mut TcpStream, paths: &Paths) {
+fn forbidden(stream: &mut TcpStream) {
+    respond(
+        stream,
+        "403 Forbidden",
+        "text/plain",
+        "Peticion rechazada (token o Origin invalido)",
+    );
+}
+
+fn handle(stream: &mut TcpStream, paths: &Paths, port: u16, token: &str) {
     let mut buf = [0u8; 8192];
     let Ok(n) = stream.read(&mut buf) else {
         return;
     };
     let request = String::from_utf8_lossy(&buf[..n]).to_string();
+    if !origin_ok(&request, port) {
+        forbidden(stream);
+        return;
+    }
     let first = request.lines().next().unwrap_or("");
     let target = first.split_whitespace().nth(1).unwrap_or("/");
     let (route, query) = target.split_once('?').unwrap_or((target, ""));
+    let authorized = token_from_query(query, "t").as_deref() == Some(token);
 
     match route {
         "/export" => {
+            if !authorized {
+                forbidden(stream);
+                return;
+            }
             let text = fs::read_to_string(feedback_path(paths)).unwrap_or_default();
             let header = format!(
-                "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Disposition: attachment; filename=\"feedback.tsv\"\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Disposition: attachment; filename=\"feedback.tsv\"\r\nContent-Length: {}\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n",
                 text.len()
             );
             let _ = stream.write_all(header.as_bytes());
@@ -349,11 +459,11 @@ fn handle(stream: &mut TcpStream, paths: &Paths) {
             let _ = stream.flush();
         }
         "/ok" | "/bad" => {
-            let id = query
-                .split('&')
-                .find_map(|p| p.strip_prefix("id="))
-                .map(|s| s.replace("%20", " "))
-                .unwrap_or_default();
+            if !authorized {
+                forbidden(stream);
+                return;
+            }
+            let id = token_from_query(query, "id").unwrap_or_default();
             match apply_feedback(paths, &id, route == "/ok") {
                 Ok(()) => {
                     ui::info(&format!(
@@ -370,20 +480,98 @@ fn handle(stream: &mut TcpStream, paths: &Paths) {
             }
         }
         _ => {
-            let page = html(paths);
+            let page = html(paths, token);
             respond(stream, "200 OK", "text/html", &page);
         }
     }
 }
 
 pub fn serve(paths: &Paths, port: u16) -> Result<(), String> {
+    let token = panel_token(paths)?;
     let listener = TcpListener::bind(("127.0.0.1", port))
         .map_err(|e| format!("No se pudo escuchar en 127.0.0.1:{port}: {e}"))?;
     ui::ok(&format!("Panel disponible en http://127.0.0.1:{port}"));
     ui::info("Pulsa Ctrl+C para cerrar");
     for mut stream in listener.incoming().flatten() {
-        handle(&mut stream, paths);
+        handle(&mut stream, paths, port, &token);
     }
+    Ok(())
+}
+
+/// Comprueba si el panel ya responde en el puerto dado.
+fn is_up(port: u16) -> bool {
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    TcpStream::connect_timeout(&addr, Duration::from_millis(200)).is_ok()
+}
+
+/// Arranca el panel si hace falta y abre el navegador. Es la acción del
+/// lanzador `.desktop`, que antes ejecutaba `--handler` sin archivo y parecía
+/// "no abrir" nada.
+pub fn open_app(paths: &Paths, port: u16) -> Result<(), String> {
+    let url = format!("http://127.0.0.1:{port}");
+    if !is_up(port) {
+        let bin =
+            std::env::current_exe().map_err(|e| format!("No se pudo resolver el binario: {e}"))?;
+        let log = paths.logs.join("panel.log");
+        let out = fs::File::create(&log)
+            .map_err(|e| format!("No se pudo crear {}: {e}", log.display()))?;
+        let err = out
+            .try_clone()
+            .map_err(|e| format!("No se pudo abrir el log del panel: {e}"))?;
+        let mut cmd = ProcessCommand::new(bin);
+        cmd.args(["panel", "--port", &port.to_string()])
+            .stdin(Stdio::null())
+            .stdout(Stdio::from(out))
+            .stderr(Stdio::from(err));
+        #[cfg(unix)]
+        cmd.process_group(0);
+        cmd.spawn()
+            .map_err(|e| format!("No se pudo arrancar el panel: {e}"))?;
+        let mut up = false;
+        for _ in 0..40 {
+            if is_up(port) {
+                up = true;
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(100));
+        }
+        if !up {
+            return Err(format!(
+                "El panel no respondio en {url}; revisa {}",
+                log.display()
+            ));
+        }
+        ui::ok(&format!("Panel iniciado en {url}"));
+    } else {
+        ui::info(&format!("El panel ya estaba activo en {url}"));
+    }
+
+    let gui =
+        std::env::var_os("DISPLAY").is_some() || std::env::var_os("WAYLAND_DISPLAY").is_some();
+    if !gui {
+        ui::info(&format!("Abre esta URL en tu navegador: {url}"));
+        return Ok(());
+    }
+    for opener in ["xdg-open", "gio", "firefox", "chromium"] {
+        if let Some(bin) = crate::runner::which(opener) {
+            let mut args: Vec<String> = vec![url.clone()];
+            if opener == "gio" {
+                args.insert(0, "open".to_string());
+            }
+            if ProcessCommand::new(bin)
+                .args(&args)
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+                .is_ok()
+            {
+                ui::ok(&format!("Abriendo {url} en el navegador"));
+                return Ok(());
+            }
+        }
+    }
+    ui::warn(&format!("No se encontro navegador; abre manualmente {url}"));
     Ok(())
 }
 
@@ -445,6 +633,28 @@ mod tests {
             "receta-x\t-0.1\nreceta-y\t0.05\n"
         );
         assert!(load_history(&paths)[0].verdict == "import");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn panel_token_is_stable_and_protected() {
+        let (paths, root) = temp_paths("crisol_panel_token_test");
+        let token = panel_token(&paths).unwrap();
+        assert!(token.len() >= 32);
+        assert_eq!(panel_token(&paths).unwrap(), token);
+        assert!(token_from_query(&format!("t={token}"), "t") == Some(token.clone()));
+        assert!(origin_ok(
+            "GET / HTTP/1.1\r\nOrigin: http://127.0.0.1:8765\r\n",
+            8765
+        ));
+        assert!(!origin_ok(
+            "GET /ok?id=app HTTP/1.1\r\nOrigin: https://evil.example\r\n",
+            8765
+        ));
+        assert!(!origin_ok(
+            "GET /bad?id=app HTTP/1.1\r\nSec-Fetch-Site: cross-site\r\n",
+            8765
+        ));
         fs::remove_dir_all(root).unwrap();
     }
 }

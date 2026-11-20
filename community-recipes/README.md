@@ -1,8 +1,15 @@
 # Recetas comunitarias
 
 Este directorio es el repositorio comunitario de recetas compartibles de Crisol.
-Aquí se publican soluciones probadas contra logs reales de instalación para que
-otras personas puedan reutilizarlas con `crisol recipes import`.
+Aquí se publican soluciones para que otras personas puedan reutilizarlas con
+`crisol recipes import`.
+
+**Importante:** las 6 recetas y sus fixtures actuales son **ejemplos
+anonimizados y sintéticos**, no evidencia de instalaciones reales. Sirven para
+probar el DSL y el validador. La campaña para conseguir **20 recetas con logs
+reales verificados**, las reglas de redacción y el consentimiento están en
+[REAL-LOGS.md](REAL-LOGS.md). Los logs reales tienen prioridad sobre las recetas
+especulativas.
 
 Las recetas de aquí **no sustituyen** a las internas (`recipes/core.recipe`): se
 importan como recetas de usuario. Por eso los `[id]` deben empezar con
@@ -28,11 +35,15 @@ community-recipes/
 * `recipe.recipe` usa el DSL habitual de Crisol (ver `../README.md`, sección
   «Recetas»). Incluye al menos `confidence`, `priority`, `match_log_any`,
   `action_winetricks`, `action_message` y `action_retry`.
-* `logs/<fixture>.log` es un fragmento realista y anonimizado del log de Wine
-  que disparó la receta: 10-30 líneas con `err:module:import_dll`,
-  `fixme:msi`, mensajes MSI/nsis, etc. **No incluyas rutas personales, nombres
-  de usuario, claves ni marcas comerciales**: usa nombres genéricos
-  (`app-vcrun2022`, `app-dotnet48`, ...).
+* `logs/<fixture>.log` debería ser un fragmento **real y redactado** del log de
+  Wine que disparó la receta: 10-30 líneas con `err:module:import_dll`,
+  `err:seh`, `fixme:msi`, mensajes MSI/NSIS y el código de salida. Los 6 fixtures
+  actuales son sintéticos/anonimizados y **no** cumplen esa condición; consulta
+  [REAL-LOGS.md](REAL-LOGS.md). **No incluyas rutas personales, nombres de
+  usuario, IPs, MACs, claves ni nombres de archivo sensibles**: pásalos antes por
+  `tools/redact-log.sh` y usa nombres genéricos (`app-vcrun2022`,
+  `app-dotnet48`, ...). Para empezar un id nuevo:
+  `tools/new-recipe.sh community-mi-app` (no toca `manifest.tsv`).
 
 Después añade una fila a `manifest.tsv` con columnas separadas por TAB:
 
@@ -63,7 +74,9 @@ receta declara el `action_winetricks` anunciado. Imprime `OK <id>` o
 
 ## Importar
 
-El comando ya está implementado y busca recursivamente:
+El comando **ya funciona de forma recursiva** (no hace falta aplanar ni copiar
+los archivos a mano: `collect_recipes` en `src/recipe.rs` recorre los
+subdirectorios):
 
 ```sh
 crisol recipes import community-recipes/apps

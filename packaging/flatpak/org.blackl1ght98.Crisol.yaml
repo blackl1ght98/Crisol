@@ -26,12 +26,17 @@ modules:
       - . /usr/lib/sdk/rust-stable/enable.sh && cargo build --release --offline
       - install -Dm755 target/release/crisol /app/bin/crisol
       - install -Dm644 README.md /app/share/doc/crisol/README.md
+      - install -Dm644 LICENSE /app/share/licenses/org.blackl1ght98.Crisol/LICENSE
+      # core.recipe va embebido en el binario: esta copia es solo de consulta.
       - install -d /app/share/crisol/recipes
       - install -m644 recipes/*.recipe /app/share/crisol/recipes/
       - install -Dm644 assets/crisol.svg /app/share/icons/hicolor/scalable/apps/crisol.svg
       # No existe assets/*.desktop en el repositorio: no se inventa uno.
       # `crisol setup-desktop` genera el .desktop en ~/.local/share/applications
       # fuera del sandbox, por lo que la integración con el escritorio es manual.
+      # Las recetas del usuario se leen de $XDG_CONFIG_HOME/crisol/recipes;
+      # dentro de Flatpak $HOME es ~/.var/app/org.blackl1ght98.Crisol, así que
+      # copia las tuyas a ~/.var/app/org.blackl1ght98.Crisol/config/crisol/recipes.
     sources:
       - type: git
         url: https://github.com/blackl1ght98/Crisol

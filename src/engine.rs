@@ -635,6 +635,82 @@ pub fn show_recipes(paths: &Paths) -> Result<(), String> {
     Ok(())
 }
 
+/// Versión legible por máquina de `list`.
+pub fn list_json(paths: &Paths) -> Result<(), String> {
+    let entries = catalog::load(&paths.catalog);
+    let rows: Vec<String> = entries
+        .iter()
+        .map(|e| {
+            format!(
+                "{{\"id\":{},\"name\":{},\"status\":{},\"exe\":{},\"recipes\":{}}}",
+                crate::json::quote(&e.id),
+                crate::json::quote(&e.name),
+                crate::json::quote(&e.last_status),
+                crate::json::quote(&e.exe),
+                crate::json::quote(&e.recipes)
+            )
+        })
+        .collect();
+    println!("{{\"apps\":[{}]}}", rows.join(","));
+    Ok(())
+}
+
+/// Versión legible por máquina de `recipes`.
+pub fn show_recipes_json(paths: &Paths) -> Result<(), String> {
+    let recipes = recipe::parse_all(include_str!("../recipes/core.recipe"), &paths.recipes);
+    let rows: Vec<String> = recipes
+        .iter()
+        .map(|r| {
+            format!(
+                "{{\"id\":{},\"score\":{:.0},\"matchers\":{},\"source\":{}}}",
+                crate::json::quote(&r.id),
+                r.score(),
+                r.matchers.len(),
+                crate::json::quote(&r.source)
+            )
+        })
+        .collect();
+    println!("{{\"recipes\":[{}]}}", rows.join(","));
+    Ok(())
+}
+
+/// Versión legible por máquina de `doctor`.
+pub fn doctor_json(paths: &Paths) -> Result<(), String> {
+    let mut bins = Vec::new();
+    for bin in [
+        "wine",
+        "wineboot",
+        "winetricks",
+        "bwrap",
+        "xdg-mime",
+        "cp",
+        "mv",
+    ] {
+        let value = match runner::which(bin) {
+            Some(p) => crate::json::quote(&p.to_string_lossy()),
+            None => "null".to_string(),
+        };
+        bins.push(format!("{}:{}", crate::json::quote(bin), value));
+    }
+    let handler = Command::new("xdg-mime")
+        .args(["query", "default", "application/x-msdownload"])
+        .output()
+        .ok()
+        .map(|out| String::from_utf8_lossy(&out.stdout).trim().to_string())
+        .unwrap_or_default();
+    let recipes = recipe::parse_all(include_str!("../recipes/core.recipe"), &paths.recipes);
+    println!(
+        "{{\"tools\":{{{}}},\"recipes\":{},\"exe_handler\":{},\"home\":{},\"prefixes\":{},\"catalog\":{}}}",
+        bins.join(","),
+        recipes.len(),
+        crate::json::quote(&handler),
+        crate::json::quote(&paths.home.to_string_lossy()),
+        crate::json::quote(&paths.prefixes.to_string_lossy()),
+        crate::json::quote(&paths.catalog.to_string_lossy())
+    );
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

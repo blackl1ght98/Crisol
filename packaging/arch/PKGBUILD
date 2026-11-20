@@ -8,6 +8,8 @@ pkgdesc="Capa de orquestación de compatibilidad sobre Wine: instala .exe/.msi, 
 arch=('x86_64')
 url="https://github.com/blackl1ght98/Crisol"
 license=('MIT')
+# git se necesita para la fuente VCS; cargo no está en base-devel.
+makedepends=('git' 'cargo')
 depends=(wine winetricks bubblewrap)
 optdepends=(
   'qemu: fallback a una VM con Windows real'
@@ -16,7 +18,9 @@ optdepends=(
   'virtio-win: controladores virtio para invitados Windows'
   'pipewire: audio en VM'
 )
-source=("$url.git")
+# Sin el prefijo git+ makepkg descargaría la URL como un fichero y no existiría
+# $srcdir/Crisol; con git+ se clona en $srcdir/Crisol (md5 SKIP es normal en VCS).
+source=("git+$url.git")
 md5sums=('SKIP')
 
 build() {

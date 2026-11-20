@@ -1,21 +1,23 @@
-# Especificación RPM para Crisol. Source0 es la URL de Git: en %prep se clona
-# (no hay tarball que extraer con %autosetup). Para una publicación oficial con
-# etiquetas de versión conviene cambiar Source0 por un tarball con checksum.
+# Especificación RPM para Crisol. No hay Source0: rpmbuild no descarga URLs y
+# %{SOURCE0} sería una ruta local bajo SOURCES/, no una URL clonable. %prep clona
+# el repositorio directamente (necesita red). Para una publicación oficial conviene
+# sustituir esto por un tarball con etiqueta y checksum como Source0.
+%global upstream_url https://github.com/blackl1ght98/Crisol
 Name:           crisol
 Version:        0.1.0
 Release:        1%{?dist}
 Summary:        Capa de orquestación de compatibilidad sobre Wine para instalar .exe/.msi
 License:        MIT
-URL:            https://github.com/blackl1ght98/Crisol
-Source0:        https://github.com/blackl1ght98/Crisol.git
+URL:            %{upstream_url}
 BuildRequires:  rust
 BuildRequires:  cargo
 BuildRequires:  gcc
 BuildRequires:  git
+# wine no está en los repositorios base de Fedora: habilita RPM Fusion antes de instalar.
 Requires:       wine
 Requires:       winetricks
 Requires:       bubblewrap
-Recommends:     qemu-ovmf
+Recommends:     edk2-ovmf
 Recommends:     qemu-kvm
 Recommends:     virtio-win
 
@@ -28,7 +30,8 @@ experimental y no incluye Windows ni runtimes de Microsoft.
 
 %prep
 rm -rf %{name}
-git clone --depth 1 %{SOURCE0} %{name}
+# No usar %{SOURCE0}: se expande a un fichero en SOURCES/, no a la URL.
+git clone --depth 1 %{upstream_url} %{name}
 # Si la etiqueta v%{version} existe, se puede fijar con:
 # git -C %{name} checkout v%{version}
 
