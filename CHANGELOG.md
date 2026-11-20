@@ -1,23 +1,26 @@
 # Changelog
 
 Todos los cambios notables de Crisol. El formato sigue en líneas generales
-[Keep a Changelog](https://keepachangelog.com/es/1.1.0/). No se registran fechas
-de release porque aún no hay una publicación con tag.
+[Keep a Changelog](https://keepachangelog.com/es/1.1.0/). `v0.1.0` está
+publicado como tag y release con tarball fuente, binario y `SHA256SUMS`.
 
 ## [Unreleased]
 
-### Próximamente
+### Añadido tras v0.1.0
+
+* 1 receta comunitaria (`community-real-vulkan-gpu-app1`) basada en un log real
+  redactado de una instalación local, con diagnóstico sin winetricks validado.
+  El validador acepta `action_winetricks = -` para este tipo de receta.
+
+### En curso
 
 * Logs reales verificados para recetas comunitarias (objetivo: 20). Campaña en
   `community-recipes/REAL-LOGS.md`.
-* Panel: token local, comprobación de `Origin` / `Sec-Fetch-Site` y cabeceras
-  `nosniff` / `referrer-policy` (pendiente; ver `docs/SECURITY.md`).
-* Arranque real de una VM y PRs aguas arriba (ver `ROADMAP.md`).
+* Arranque real de una VM y envío de los borradores de `docs/UPSTREAM.md`.
 
 ## [0.1.0]
 
-Primera versión del prototipo funcional. Sin fecha de publicación: es la versión
-declarada en `Cargo.toml` y del código presente en el repositorio.
+Primera versión del prototipo funcional, etiquetada como `v0.1.0`.
 
 ### Añadido
 
@@ -35,36 +38,51 @@ declarada en `Cargo.toml` y del código presente en el repositorio.
 * **Extracción de iconos del PE** (`RT_GROUP_ICON` / `RT_ICON`) para el acceso
   directo `.desktop`, con icono propio de Crisol como reserva.
 * **Integración de escritorio**: doble clic en `.exe`/`.msi` vía `xdg-mime`,
-  catálogo local, `launch`, `repair` y `remove`.
+  catálogo local, `launch`, `repair` y `remove`. `crisol setup-desktop` instala
+  un lanzador visible (`crisol.desktop`, ejecuta `crisol app`) y un manejador
+  oculto (`crisol-handler.desktop`) para el doble clic.
+* **`crisol app`**: abre el panel en el navegador y lo arranca si no está activo.
+  Corrige el fallo por el que la entrada del menú parecía "no abrir".
 * **Panel de feedback local** en `http://127.0.0.1:<puerto>` con catálogo,
   confianza de recetas, votos **Funcionó / No funcionó**, historial
   (`feedback.log`), estadísticas y export/import (`/export`,
   `crisol feedback stats|export|import`).
+* **Seguridad del panel**: token local en `~/.config/crisol/panel.token`
+  exigido en `/ok`, `/bad` y `/export`; rechazo de `Origin` ajeno y de
+  `Sec-Fetch-Site: cross-site`; cabeceras `nosniff`, `referrer-policy` y
+  `no-store`. Ver `docs/SECURITY.md`.
+* **CLI para scripts**: `--version`, `--json` (`list`, `doctor`, `recipes`,
+  `feedback stats`) y `crisol completions bash|zsh|fish`.
 * **Importación y exportación de recetas compartidas**, incluida la búsqueda
   recursiva con `crisol recipes import <dir>`.
 * **Recetas comunitarias** en `community-recipes/` con 6 recetas y 6 fixtures
-  **anonimizados/sintéticos** (no logs reales) validados por
+  **anonimizados/sintéticos**, más 1 receta con un log real redactado, validadas por
   `tools/validate-recipes.sh` y `community-recipes/manifest.tsv`.
+* **Herramientas de comunidad**: `tools/redact-log.sh`, `tools/new-recipe.sh`,
+  plantilla de issue `receta-real`, PR template y campaña `REAL-LOGS.md`.
 * **Fallback a VM**: `crisol vm doctor|setup|list|create|start|install` genera
   QEMU/KVM con disco qcow2, virtio, OVMF, 9p y scripts para VFIO; opciones
   `--vm` y `--vm-fallback`. No instala QEMU ni Windows y no ejecuta `sudo`.
 * **Bubblewrap** como aislamiento práctico del instalador, desactivable con
   `--no-sandbox`.
 * **CI** en `.github/workflows/ci.yml`: fmt, clippy, `cargo test`, build de
-  release y `tests/integration.sh`.
+  release y `tests/integration.sh` (incluye comprobación de CSRF y CLI JSON).
 * **Empaquetado experimental** para Arch (`PKGBUILD`), Fedora (spec) y Flatpak
-  en `packaging/`, además de `install.sh` para `~/.local/bin`.
-* Documentación en español: README, `docs/CONTRIBUTING.md`,
-  `docs/UPSTREAM.md`, plantillas de issue/PR y código de conducta.
+  en `packaging/`, con verificación estática en `tools/check-packaging.sh`.
+* **Documentación**: README (es/en), `docs/CONTRIBUTING.md`, `docs/SECURITY.md`,
+  `docs/VM.md`, `docs/UPSTREAM.md`, `CHANGELOG.md`, `ROADMAP.md`, plantillas de
+  issue/PR y código de conducta.
 
 ### Limitaciones conocidas
 
-* Los 6 fixtures de `community-recipes/apps/` no son evidencia de instalaciones
-  reales; no hay todavía 20 recetas con logs reales verificados.
-* El panel no dispone aún de token, filtrado de `Origin` ni cabeceras de
-  seguridad; ver `docs/SECURITY.md`.
+* Solo 1 de las 7 recetas comunitarias se basa en un log real; faltan 19 para
+  alcanzar el objetivo de 20 recetas con logs reales verificados.
+* El workflow de CI está en el repositorio pero no pudo subirse con el token
+  disponible (GitHub exige el scope `workflow`).
 * La VM no ha sido arrancada en el entorno de desarrollo y QEMU no está
   instalado en él; ver `docs/VM.md`.
+* Los paquetes no se han construido: `packaging/` solo tiene verificación
+  estática; faltan `rpmbuild` y `flatpak-builder` en este entorno.
 * Los clics no se eliminan al 100 %: algunos instaladores ignoran los flags
   silenciosos; anti-cheat/DRM/drivers requieren Windows real.
 * Crisol no distribuye DLL ni runtimes de Microsoft; `winetricks` los descarga

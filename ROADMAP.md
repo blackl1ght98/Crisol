@@ -5,10 +5,10 @@ este repositorio; no implica que esté publicado o validado en producción.
 
 | # | Prioridad | Estado | Siguiente paso |
 | --- | --- | --- | --- |
-| 1 | Logs reales y recetas validadas | **En curso** | Conseguir 20 recetas con logs reales verificados; hoy hay 0 y 6 fixtures anonimizados. |
-| 2 | CI activo | **Hecho en el repo / pendiente de confirmar en GitHub** | Verificar que los jobs de `.github/workflows/ci.yml` están verdes en `main`. |
-| 3 | Release con tag y checksums | **Pendiente** | Publicar `v0.1.0` con tarball y `SHA256SUMS`. |
-| 4 | Verificación de paquetes | **Pendiente** | Sustituir `md5sums=('SKIP')` y `Source0` Git por tarball con checksum; probar Arch/Fedora/Flatpak. |
+| 1 | Logs reales y recetas validadas | **En curso** | Conseguir 20 recetas con logs reales verificados; hoy hay 1 y 6 fixtures anonimizados. |
+| 2 | CI activo | **Bloqueado por permisos** | El workflow está en el repo local; subirlo con un PAT que tenga scope `workflow` y verificar los jobs. |
+| 3 | Release con tag y checksums | **Hecho** | `v0.1.0` publicado con tarball, binario y `SHA256SUMS`. |
+| 4 | Verificación de paquetes | **Parcial** | `tools/check-packaging.sh` pasa; construir paquetes reales con `makepkg`, `rpmbuild` y `flatpak-builder`. |
 | 5 | Arranque real de VM | **Pendiente** | Instalar QEMU, arrancar Windows y probar `--vm` / `--vm-fallback` de extremo a extremo. |
 | 6 | PRs aguas arriba | **Pendiente** | Enviar los borradores de `docs/UPSTREAM.md` a winetricks, Bottles y Lutris. |
 
@@ -20,6 +20,8 @@ Hecho:
 * `tools/validate-recipes.sh` y `community-recipes/manifest.tsv`.
 * 6 recetas comunitarias con fixtures **sintéticos/anonimizados**: sirven para
   validar el formato, **no son logs reales**.
+* 1 receta (`community-real-vulkan-gpu-app1`) con un log **real redactado** de
+  una instalación local: diagnóstico sin winetricks validado.
 * Herramientas de apoyo: `tools/redact-log.sh`, `tools/new-recipe.sh`,
   `community-recipes/REAL-LOGS.md` y la plantilla de issue `receta-real`.
 
@@ -30,26 +32,26 @@ Pendiente:
 * Priorizar logs sobre recetas especulativas: sin log real no se añade receta
   nueva al directorio comunitario.
 
-## 2. CI activo — HECHO EN EL REPO, PENDIENTE DE CONFIRMACIÓN
+## 2. CI activo — BLOQUEADO POR PERMISOS
 
 Hecho: workflow con `cargo fmt --check`, `cargo clippy -D warnings`,
 `cargo test --all-targets`, build release y `bash tests/integration.sh`.
 
-Pendiente: comprobar que el badge de CI está en verde tras el primer push a
-`main` y que no hay jobs omitidos por permisos del repositorio.
+Pendiente: GitHub rechaza `.github/workflows/ci.yml` con el PAT disponible porque
+no tiene el scope `workflow`. Hay un commit local listo; al subirlo hay que
+comprobar que el badge está en verde y que no hay jobs omitidos.
 
-## 3. Release con tag y checksums — PENDIENTE
+## 3. Release con tag y checksums — HECHO
 
-No hay tag ni fecha de release. Cuando se publique: etiqueta `v0.1.0`, notas
-desde `CHANGELOG.md`, tarball fuente y `SHA256SUMS` firmado o al menos
-verificable. El badge de release de `README.en.md` apuntará a esa publicación.
+Tag `v0.1.0` y release publicados con notas desde `CHANGELOG.md`, tarball
+fuente (`crisol-0.1.0-src.tar.gz`), binario x86_64 y `SHA256SUMS` verificable.
 
-## 4. Verificación de paquetes — PENDIENTE
+## 4. Verificación de paquetes — PARCIAL
 
-`packaging/` es experimental: el `PKGBUILD` usa `md5sums=('SKIP')` porque clona
-Git, y el spec de Fedora también necesita red. Flatpak usa `branch: main`.
-Sustituir todo por el tarball con checksum del punto 3 y ejecutar `makepkg`,
-`rpmbuild` y `flatpak-builder` en entornos limpios.
+`packaging/` sigue siendo experimental. `tools/check-packaging.sh` valida la
+estructura, sintaxis del PKGBUILD, campos del spec y YAML, y pasa correctamente.
+Queda sustituir las fuentes Git por el tarball con checksum del punto 3 y
+ejecutar `makepkg`, `rpmbuild` y `flatpak-builder` en entornos limpios.
 
 ## 5. Arranque real de VM — PENDIENTE
 

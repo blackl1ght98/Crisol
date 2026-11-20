@@ -4,9 +4,9 @@ Este directorio es el repositorio comunitario de recetas compartibles de Crisol.
 Aquí se publican soluciones para que otras personas puedan reutilizarlas con
 `crisol recipes import`.
 
-**Importante:** las 6 recetas y sus fixtures actuales son **ejemplos
+**Importante:** 6 de las 7 recetas y sus fixtures actuales son **ejemplos
 anonimizados y sintéticos**, no evidencia de instalaciones reales. Sirven para
-probar el DSL y el validador. La campaña para conseguir **20 recetas con logs
+probar el DSL y el validador; la séptima usa un log real redactado. La campaña para conseguir **20 recetas con logs
 reales verificados**, las reglas de redacción y el consentimiento están en
 [REAL-LOGS.md](REAL-LOGS.md). Los logs reales tienen prioridad sobre las recetas
 especulativas.
@@ -37,7 +37,7 @@ community-recipes/
   `action_winetricks`, `action_message` y `action_retry`.
 * `logs/<fixture>.log` debería ser un fragmento **real y redactado** del log de
   Wine que disparó la receta: 10-30 líneas con `err:module:import_dll`,
-  `err:seh`, `fixme:msi`, mensajes MSI/NSIS y el código de salida. Los 6 fixtures
+  `err:seh`, `fixme:msi`, mensajes MSI/NSIS y el código de salida. Los 6 fixtures sintéticos
   actuales son sintéticos/anonimizados y **no** cumplen esa condición; consulta
   [REAL-LOGS.md](REAL-LOGS.md). **No incluyas rutas personales, nombres de
   usuario, IPs, MACs, claves ni nombres de archivo sensibles**: pásalos antes por

@@ -66,7 +66,8 @@ while IFS=$'\t' read -r id app match_any winetricks fixture || [[ -n "${id:-}" ]
                 break
             fi
         done < "$recipe"
-        if [[ "${declared,,}" != "${winetricks,,}" ]]; then
+        # "-" significa "sin winetricks": recetas de diagnóstico con log real.
+        if [[ "$winetricks" != "-" && "${declared,,}" != "${winetricks,,}" ]]; then
             reasons+=("action_winetricks esperado '$winetricks', encontrado '$declared'")
         fi
     fi

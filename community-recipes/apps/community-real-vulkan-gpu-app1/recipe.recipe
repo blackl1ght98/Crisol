@@ -1,0 +1,8 @@
+# Receta basada en un log REAL de una instalación local, redactado.
+# No hay winetricks validado aún: solo diagnóstico y mensaje accionable.
+[community-real-vulkan-gpu-app1]
+confidence = 0.60
+priority = 10
+match_log_any = err:vulkan:init_physical_devices, llvmpipe
+action_message = El instalador no encontró Vulkan/GPU y cayó a llvmpipe (software). Comprueba los drivers Mesa/Vulkan del host antes de reintentar; no se aplica winetricks porque el fallo es del host.
+action_retry = false

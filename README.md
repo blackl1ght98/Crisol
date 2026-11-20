@@ -225,9 +225,9 @@ descubriste, y `crisol repair <id>` la aplicará.
 
 El directorio `community-recipes/` es el repositorio comunitario de recetas:
 cada app tiene su carpeta en `apps/<id>/` con un `recipe.recipe` y uno o más
-logs de ejemplo en `logs/`. **Los 6 fixtures actuales son ejemplos anonimizados,
-no evidencia de instalaciones reales**: `community-recipes/REAL-LOGS.md` explica
-cómo aportar logs reales redactados (objetivo: 20 recetas verificadas). El
+logs de ejemplo en `logs/`. **De las 7 recetas actuales, 6 usan fixtures
+anonimizados y 1 se basa en un log real redactado**: `community-recipes/REAL-LOGS.md` explica
+cómo aportar más logs reales redactados (objetivo: 20 recetas verificadas). El
 `manifest.tsv` relaciona cada receta con la cadena que debe aparecer en su log y
 con la acción winetricks esperada.
 
