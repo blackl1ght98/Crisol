@@ -15,6 +15,8 @@ use std::process::{Command as ProcessCommand, Stdio};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
+#[cfg(unix)]
 use std::os::unix::process::CommandExt;
 
 fn escape(text: &str) -> String {
@@ -67,6 +69,10 @@ fn panel_token(paths: &Paths) -> Result<String, String> {
     }
     let value: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
     fs::write(&path, &value).map_err(|e| format!("No se pudo guardar el token del panel: {e}"))?;
+    #[cfg(unix)]
+    {
+        let _ = fs::set_permissions(&path, fs::Permissions::from_mode(0o600));
+    }
     Ok(value)
 }
 

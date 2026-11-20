@@ -1,22 +1,30 @@
 # Changelog
 
 Todos los cambios notables de Crisol. El formato sigue en líneas generales
-[Keep a Changelog](https://keepachangelog.com/es/1.1.0/). `v0.1.0` está
-publicado como tag y release con tarball fuente, binario y `SHA256SUMS`.
+[Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Hay dos versiones
+publicadas: `v0.1.0` y `v0.1.1`, con tarball fuente, binario y `SHA256SUMS`.
 
 ## [Unreleased]
-
-### Añadido tras v0.1.0
-
-* 1 receta comunitaria (`community-real-vulkan-gpu-app1`) basada en un log real
-  redactado de una instalación local, con diagnóstico sin winetricks validado.
-  El validador acepta `action_winetricks = -` para este tipo de receta.
 
 ### En curso
 
 * Logs reales verificados para recetas comunitarias (objetivo: 20). Campaña en
   `community-recipes/REAL-LOGS.md`.
 * Arranque real de una VM y envío de los borradores de `docs/UPSTREAM.md`.
+
+## [0.1.1]
+
+Correcciones y evidencia añadida sobre `v0.1.0`.
+
+### Añadido
+
+* 1 receta comunitaria (`community-real-vulkan-gpu-app1`) basada en un log real
+  redactado de una instalación local, con diagnóstico sin winetricks validado.
+  El validador acepta `action_winetricks = -` para este tipo de receta.
+
+### Corregido
+
+* El token del panel se crea con permisos `0600` en sistemas Unix.
 
 ## [0.1.0]
 
