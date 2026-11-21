@@ -2,8 +2,8 @@
 
 Todos los cambios notables de Crisol. El formato sigue en líneas generales
 [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Hay dos versiones
-publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.1.3`, `v0.1.4` y `v0.1.5`, con
-tarball fuente, binario y `SHA256SUMS`.
+publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.1.3`, `v0.1.4`, `v0.1.5` y
+`v0.1.6`, con tarball fuente, binario y `SHA256SUMS`.
 
 ## [Unreleased]
 
@@ -12,6 +12,22 @@ tarball fuente, binario y `SHA256SUMS`.
 * Logs reales verificados para recetas comunitarias (objetivo: 20). Campaña en
   `community-recipes/REAL-LOGS.md`.
 * Arranque real de una VM y envío de los borradores de `docs/UPSTREAM.md`.
+
+## [0.1.6]
+
+### Corregido
+
+* `crisol vm setup` mostraba `sudo <script>` de forma ambigua y llevaba a
+  escribir `sudo crisol vm setup`, que falla porque `sudo` no ve `~/.local/bin`
+  y Crisol no debe ejecutarse como root. Ahora imprime la línea exacta con la
+  ruta absoluta: `sudo ~/.local/share/crisol/vms/setup-vm.sh`.
+* `crisol vm doctor` aclara que IOMMU solo es necesario para GPU passthrough,
+  no para arrancar una VM normal.
+
+### Pruebas
+
+* `tests/integration.sh` comprueba que `vm setup` muestra la ruta absoluta y no
+  sugiere `sudo crisol`.
 
 ## [0.1.5]
 

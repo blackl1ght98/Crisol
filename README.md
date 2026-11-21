@@ -114,6 +114,7 @@ Para esos casos Crisol prepara una VM, pero **no instala el sistema por ti**:
 crisol vm doctor                     # qué falta
 crisol vm setup                      # escribe setup-vm.sh
 sudo ~/.local/share/crisol/vms/setup-vm.sh   # tú ejecutas el script con contraseña
+# NO escribas 'sudo crisol vm setup': sudo no ve ~/.local/bin
 crisol vm create windows --iso ~/ISO/Windows.iso --ram 8 --disk 60
 crisol vm start windows
 ```

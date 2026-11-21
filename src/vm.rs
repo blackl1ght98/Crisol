@@ -61,7 +61,7 @@ pub fn doctor(paths: &Paths) -> Result<(), String> {
         {
             ui::ok("IOMMU habilitado en el kernel (posible GPU passthrough)");
         } else {
-            ui::detail("IOMMU no habilitado: añade 'amd_iommu=on iommu=pt' o 'intel_iommu=on iommu=pt' al kernel");
+            ui::detail("IOMMU no habilitado: solo hace falta para GPU passthrough; si lo quieres, añade 'amd_iommu=on iommu=pt' o 'intel_iommu=on iommu=pt' al kernel");
         }
     }
 
@@ -115,8 +115,10 @@ echo 'Despues: newgrp kvm  o  cerrar sesion y volver a entrar.'
         let _ = fs::set_permissions(&script, fs::Permissions::from_mode(0o755));
     }
     ui::ok(&format!("Script de instalacion: {}", script.display()));
-    ui::info("Ejecútalo con: sudo <script>   (necesita contraseña; no lo hago yo por ti)");
-    ui::info("Después: crisol vm doctor y crisol vm create windows --iso /ruta/Windows.iso");
+    ui::info("Copia y pega ESTA linea (sudo no ve ~/.local/bin, por eso va la ruta completa):");
+    ui::detail(&format!("sudo {}", script.display()));
+    ui::info("No escribas 'sudo crisol ...': sudo no encuentra el binario y Crisol no debe correr como root.");
+    ui::info("Después: newgrp kvm (o cierra sesión), crisol vm doctor y crisol vm create windows --iso /ruta/Windows.iso");
     Ok(())
 }
 

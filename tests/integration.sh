@@ -80,6 +80,15 @@ run_cmd "crisol vm list" "$BIN" vm list
 [[ -d "$VM_DIR/share" ]]   || fail "falta el directorio $VM_DIR/share"
 ok "VM creada: start.sh y share/ presentes"
 
+printf '\n==> vm setup: comando sudo con ruta absoluta\n'
+setup_out="$("$BIN" vm setup 2>&1)" || fail "crisol vm setup falló"
+grep -q 'setup-vm.sh' <<<"$setup_out" || fail "vm setup no muestra la ruta del script"
+grep -q 'sudo ' <<<"$setup_out" || fail "vm setup no muestra el comando sudo"
+if grep -q 'sudo crisol vm setup' <<<"$setup_out"; then
+  fail "vm setup sugiere 'sudo crisol', que sudo no encuentra"
+fi
+ok "vm setup muestra 'sudo <ruta absoluta>' y no 'sudo crisol'"
+
 # ---------------------------------------------------------------------------
 # Catálogo de prueba con 11 columnas (la última con dos recetas).
 # ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 # La fuente es la URL de Git; md5sums=('SKIP') es lo habitual en fuentes VCS.
 
 pkgname=crisol
-pkgver=0.1.5
+pkgver=0.1.6
 pkgrel=1
 pkgdesc="Capa de orquestación de compatibilidad sobre Wine: instala .exe/.msi, repara y los integra en el escritorio"
 arch=('x86_64')
