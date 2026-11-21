@@ -12,11 +12,11 @@ log, applies recipes, retries, extracts the PE icon and registers the app in
 the desktop. When Wine is not enough (kernel anti-cheat, DRM, drivers) it can
 hand the installer off to a Windows VM.
 
-> Status: working prototype, version 0.1.0. There is no tagged release yet.
-> The six community fixtures are anonymized/synthetic examples, **not real
-> installation logs**. The VM path has not been boot-tested in this environment
-> and QEMU is not installed here. See `community-recipes/REAL-LOGS.md` and
-> `docs/VM.md`.
+> Status: working prototype, version 0.1.2. Releases `v0.1.0` to `v0.1.2` are
+> tagged with source tarball, binary and `SHA256SUMS`. Six of the eight community
+> recipes are anonymized/synthetic examples, **not real installation logs**; two
+> use redacted real logs. The VM path has not been boot-tested here and QEMU is
+> not installed. See `community-recipes/REAL-LOGS.md` and `docs/VM.md`.
 
 ## Basic commands
 
@@ -25,6 +25,8 @@ hand the installer off to a Windows VM.
 crisol install ~/Downloads/setup.msi            # silent install (type detected)
 crisol install game.exe --engine wine-ge --attempts 7
 crisol install app.exe --interactive            # show the installer UI
+crisol install portable.exe                     # plain .exe: register only, do not run
+crisol install portable.exe --execute           # force execution as a smoke test
 crisol install app.exe --vm                     # hand off to the Windows VM
 
 crisol list                                    # installed apps
@@ -33,6 +35,7 @@ crisol repair <id>                             # retry with matching recipes
 crisol remove <id>
 crisol doctor
 
+crisol app                                     # start/open the local panel in a browser
 crisol panel [--port 8765]                     # local feedback panel (127.0.0.1)
 crisol feedback stats
 crisol recipes import community-recipes/apps    # recursive

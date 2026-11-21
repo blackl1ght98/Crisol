@@ -2,7 +2,7 @@
 
 Todos los cambios notables de Crisol. El formato sigue en líneas generales
 [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Hay dos versiones
-publicadas: `v0.1.0` y `v0.1.1`, con tarball fuente, binario y `SHA256SUMS`.
+publicadas: `v0.1.0`, `v0.1.1` y `v0.1.2`, con tarball fuente, binario y `SHA256SUMS`.
 
 ## [Unreleased]
 
@@ -11,6 +11,34 @@ publicadas: `v0.1.0` y `v0.1.1`, con tarball fuente, binario y `SHA256SUMS`.
 * Logs reales verificados para recetas comunitarias (objetivo: 20). Campaña en
   `community-recipes/REAL-LOGS.md`.
 * Arranque real de una VM y envío de los borradores de `docs/UPSTREAM.md`.
+
+## [0.1.2]
+
+### Añadido
+
+* **Ejecutables portables**: un `PlainExe` ya no se ejecuta como instalador. Se
+  copia al prefijo aislado, se registra en el catálogo con estado `portable` y
+  se crea su lanzador; se arranca con `crisol launch <id>`. La nueva opción
+  `--execute` (alias `--smoke-test`) fuerza el comportamiento anterior.
+* **Diagnóstico VDS**: receta interna `incompatible-vds` y receta comunitaria
+  `community-real-vds-portable-app1` basada en el log real redactado del fallo
+  de Rufus. Explica que Wine no implementa Virtual Disk Service y apunta a `--vm`.
+* `crisol install` muestra una advertencia específica para utilidades de disco
+  (Rufus, Etcher, balenaEtcher...) antes de intentar lanzarlas.
+
+### Corregido
+
+* `action_retry = false` se respeta: un fallo determinista ya no agota los 5
+  intentos. Antes `Action::Retry` se ignoraba por completo.
+* El genérico "No hay recetas que coincidan" se sustituye por una explicación
+  accionable cuando el log contiene un CLSID de incompatibilidad conocida.
+* El detector añade la pista `portable` y expone `Detection::is_portable()`.
+
+### Pruebas
+
+* 13 tests unitarios (nuevos: detección de portable y mensaje VDS).
+* `tests/integration.sh` cubre el registro portable con `wineboot` simulado,
+  la copia al prefijo, el `.desktop`, el catálogo y la receta VDS activa.
 
 ## [0.1.1]
 
@@ -83,7 +111,7 @@ Primera versión del prototipo funcional, etiquetada como `v0.1.0`.
 
 ### Limitaciones conocidas
 
-* Solo 1 de las 7 recetas comunitarias se basa en un log real; faltan 19 para
+* Solo 2 de las 8 recetas comunitarias se basan en logs reales; faltan 18 para
   alcanzar el objetivo de 20 recetas con logs reales verificados.
 * El workflow de CI está en el repositorio pero no pudo subirse con el token
   disponible (GitHub exige el scope `workflow`).

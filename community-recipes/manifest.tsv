@@ -6,3 +6,4 @@ community-oleaut32-app1	app-oleaut32	oleaut32.dll, error 0x80040154, class not r
 community-msxml-app1	app-msxml	msxml3.dll, msxml6.dll	msxml3, msxml6	logs/msxml-install.log
 community-corefonts-app1	app-corefonts	corefonts, tahoma, times new roman	corefonts	logs/corefonts-install.log
 community-real-vulkan-gpu-app1	app-vulkan-gpu	err:vulkan:init_physical_devices, llvmpipe	-	logs/real-vulkan.log
+community-real-vds-portable-app1	app-vds-portable	9c38ed61-d565-4728-aeee-c80952f0ecde	-	logs/real-vds-portable.log

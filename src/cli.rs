@@ -9,6 +9,8 @@ pub struct Options {
     pub timeout_secs: u64,
     pub exe: Option<String>,
     pub interactive: bool,
+    /// Ejecuta un .exe portable como prueba; por defecto solo se registra.
+    pub execute: bool,
     pub vm: bool,
     pub vm_fallback: bool,
     pub iso: Option<String>,
@@ -29,6 +31,7 @@ impl Default for Options {
             timeout_secs: 900,
             exe: None,
             interactive: false,
+            execute: false,
             vm: false,
             vm_fallback: false,
             iso: None,
@@ -106,6 +109,7 @@ pub fn parse(args: Vec<String>) -> Command {
             "--no-sandbox" => opts.sandbox = false,
             "--yes" | "-y" => opts.yes = true,
             "--interactive" => opts.interactive = true,
+            "--execute" | "--smoke-test" => opts.execute = true,
             "--vm" => opts.vm = true,
             "--vm-fallback" => opts.vm_fallback = true,
             "--iso" => {
@@ -348,7 +352,7 @@ pub fn print_help() {
 /// Genera un script de completions estático (sin dependencias).
 pub fn print_completions(shell: &str) {
     let cmds = "install launch list recipes doctor app panel feedback vm setup-desktop repair remove completions help";
-    let flags = "--no-sandbox --yes --interactive --vm --vm-fallback --iso --disk --ram --cpus --gpu-pci --port --attempts --engine --timeout --exe --json --version --help";
+    let flags = "--no-sandbox --yes --interactive --vm --vm-fallback --iso --disk --ram --cpus --gpu-pci --port --attempts --engine --timeout --exe --execute --smoke-test --json --version --help";
     match shell {
         "bash" => println!(
             "_crisol() {{\n  local cur=\"${{COMP_WORDS[COMP_CWORD]}}\"\n  COMPREPLY=( $(compgen -W \"{cmds} {flags}\" -- \"$cur\") )\n}}\ncomplete -F _crisol crisol\n"

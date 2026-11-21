@@ -5,10 +5,11 @@
 Hoy no hemos alcanzado ese objetivo. Esta campaña existe porque el mayor hueco
 de Crisol no es código: son **evidencias reales de instalación**.
 
-## Estado actual: 1 log real y 6 fixtures NO reales
+## Estado actual: 2 logs reales y 6 fixtures NO reales
 
-En `community-recipes/apps/` hay 6 recetas con fixtures sintéticos y una séptima
-(`community-real-vulkan-gpu-app1`) basada en un log real redactado. Los primeros 6
+En `community-recipes/apps/` hay 6 recetas con fixtures sintéticos y dos basadas
+en logs reales redactados: `community-real-vulkan-gpu-app1` (GPU/Vulkan) y
+`community-real-vds-portable-app1` (Rufus/VDS). Los primeros 6
 son ejemplos anonimizados y sintéticos, **no evidencia de instalaciones reales**.
 Sirven para probar el DSL y el validador, nada más.
 No digas en un issue, PR, documento ni commit que esos logs proceden de una

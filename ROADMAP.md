@@ -5,9 +5,9 @@ este repositorio; no implica que esté publicado o validado en producción.
 
 | # | Prioridad | Estado | Siguiente paso |
 | --- | --- | --- | --- |
-| 1 | Logs reales y recetas validadas | **En curso** | Conseguir 20 recetas con logs reales verificados; hoy hay 1 y 6 fixtures anonimizados. |
+| 1 | Logs reales y recetas validadas | **En curso** | Conseguir 20 recetas con logs reales verificados; hoy hay 2 y 6 fixtures anonimizados. |
 | 2 | CI activo | **Bloqueado por permisos** | El workflow está en el repo local; subirlo con un PAT que tenga scope `workflow` y verificar los jobs. |
-| 3 | Release con tag y checksums | **Hecho** | `v0.1.0` publicado con tarball, binario y `SHA256SUMS`. |
+| 3 | Release con tag y checksums | **Hecho** | `v0.1.0`, `v0.1.1` y `v0.1.2` publicados con tarball, binario y `SHA256SUMS`. |
 | 4 | Verificación de paquetes | **Parcial** | `tools/check-packaging.sh` pasa; construir paquetes reales con `makepkg`, `rpmbuild` y `flatpak-builder`. |
 | 5 | Arranque real de VM | **Pendiente** | Instalar QEMU, arrancar Windows y probar `--vm` / `--vm-fallback` de extremo a extremo. |
 | 6 | PRs aguas arriba | **Pendiente** | Enviar los borradores de `docs/UPSTREAM.md` a winetricks, Bottles y Lutris. |
@@ -20,8 +20,10 @@ Hecho:
 * `tools/validate-recipes.sh` y `community-recipes/manifest.tsv`.
 * 6 recetas comunitarias con fixtures **sintéticos/anonimizados**: sirven para
   validar el formato, **no son logs reales**.
-* 1 receta (`community-real-vulkan-gpu-app1`) con un log **real redactado** de
-  una instalación local: diagnóstico sin winetricks validado.
+* 2 recetas con logs **reales redactados** de instalaciones locales:
+  `community-real-vulkan-gpu-app1` (GPU/Vulkan) y
+  `community-real-vds-portable-app1` (Rufus/VDS). Ambas son diagnósticos sin
+  winetricks validado.
 * Herramientas de apoyo: `tools/redact-log.sh`, `tools/new-recipe.sh`,
   `community-recipes/REAL-LOGS.md` y la plantilla de issue `receta-real`.
 
@@ -43,8 +45,8 @@ comprobar que el badge está en verde y que no hay jobs omitidos.
 
 ## 3. Release con tag y checksums — HECHO
 
-Tag `v0.1.0` y release publicados con notas desde `CHANGELOG.md`, tarball
-fuente (`crisol-0.1.0-src.tar.gz`), binario x86_64 y `SHA256SUMS` verificable.
+Tags `v0.1.0`, `v0.1.1` y `v0.1.2` publicados con notas desde `CHANGELOG.md`,
+tarball fuente, binario x86_64 y `SHA256SUMS` verificable.
 
 ## 4. Verificación de paquetes — PARCIAL
 

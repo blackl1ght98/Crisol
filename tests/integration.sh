@@ -195,5 +195,52 @@ for shell in bash zsh fish; do
 done
 ok "completions bash/zsh/fish generados"
 
+# ---------------------------------------------------------------------------
+# Portable: un PE sin firma de instalador se registra SIN ejecutarse.
+# Se usa un wineboot falso para no depender de Wine en CI.
+# ---------------------------------------------------------------------------
+mkdir -p "$TMP_ROOT/bin" "$TMP_ROOT/portables"
+cat > "$TMP_ROOT/bin/wineboot" <<'EOS'
+#!/bin/sh
+mkdir -p "$WINEPREFIX/drive_c/windows"
+exit 0
+EOS
+chmod +x "$TMP_ROOT/bin/wineboot"
+python3 - "$TMP_ROOT/portables/rufus-test.exe" <<'PY'
+import sys
+data = bytearray(256)
+data[0:2] = b"MZ"
+data[0x3c:0x40] = (0x80).to_bytes(4, "little")
+data[0x80:0x84] = b"PE\0\0"
+data[0x84:0x86] = (0x8664).to_bytes(2, "little")
+open(sys.argv[1], "wb").write(data)
+PY
+
+printf '\n==> Instalando portable rufus-test.exe (wineboot simulado)\n'
+if ! out="$(PATH="$TMP_ROOT/bin:$PATH" "$BIN" install "$TMP_ROOT/portables/rufus-test.exe" 2>&1)"; then
+  printf '%s\n' "$out" >&2
+  fail "install de portable devolvió error"
+fi
+grep -q 'registrado como portable' <<<"$out" || fail "la salida no indica registro portable"
+grep -q 'Virtual Disk Service' <<<"$out" || fail "falta la advertencia VDS para una utilidad de disco"
+grep -q 'crisol launch' <<<"$out" || fail "no se explica cómo lanzar el portable"
+ok "portable registrado sin ejecutarse, con aviso VDS"
+
+copied="$(find "$XDG_DATA_HOME/crisol/prefixes" -path '*/drive_c/portables/rufus-test.exe' -print -quit 2>/dev/null || true)"
+[[ -n "$copied" && -f "$copied" ]] || fail "el portable no se copió al prefijo"
+ok "portable copiado al prefijo aislado"
+
+desktop_file="$(find "$XDG_DATA_HOME/applications" -name 'crisol-rufus-test-*.desktop' -print -quit 2>/dev/null || true)"
+[[ -n "$desktop_file" ]] || fail "no se creó el .desktop del portable"
+grep -q ' launch ' "$desktop_file" || fail "el .desktop no usa 'crisol launch'"
+ok "lanzador de escritorio creado para el portable"
+
+"$BIN" list | grep -q 'portable' || fail "crisol list no muestra el estado portable"
+ok "crisol list muestra el portable en el catálogo"
+
+grep -q 'incompatible-vds' "$ROOT/recipes/core.recipe" || fail "falta la receta VDS en core.recipe"
+"$BIN" --json recipes | grep -q 'incompatible-vds' || fail "la receta VDS no aparece en crisol --json recipes"
+ok "receta de diagnóstico VDS activa por defecto"
+
 printf '\n==> Integración completada correctamente\n'
 

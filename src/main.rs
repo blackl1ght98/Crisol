@@ -56,6 +56,9 @@ fn main() {
                     "Aplicación: {} | ID: {} | intentos: {}",
                     report.name, report.id, report.attempts
                 ));
+                if report.portable {
+                    ui::ok("Portable registrado: no se ejecutó durante la instalación.");
+                }
                 if let Some(exe) = &report.exe {
                     ui::detail(&format!("Ejecutable: {exe}"));
                 }

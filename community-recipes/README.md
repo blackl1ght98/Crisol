@@ -4,9 +4,9 @@ Este directorio es el repositorio comunitario de recetas compartibles de Crisol.
 Aquí se publican soluciones para que otras personas puedan reutilizarlas con
 `crisol recipes import`.
 
-**Importante:** 6 de las 7 recetas y sus fixtures actuales son **ejemplos
+**Importante:** 6 de las 8 recetas y sus fixtures actuales son **ejemplos
 anonimizados y sintéticos**, no evidencia de instalaciones reales. Sirven para
-probar el DSL y el validador; la séptima usa un log real redactado. La campaña para conseguir **20 recetas con logs
+probar el DSL y el validador; las otras dos usan logs reales redactados (GPU/Vulkan y Rufus/VDS). La campaña para conseguir **20 recetas con logs
 reales verificados**, las reglas de redacción y el consentimiento están en
 [REAL-LOGS.md](REAL-LOGS.md). Los logs reales tienen prioridad sobre las recetas
 especulativas.

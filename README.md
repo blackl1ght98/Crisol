@@ -41,6 +41,8 @@ crisol install app.exe --exe "drive_c/Program Files/App/app.exe"   # elegir ejec
 crisol install programa.exe --timeout 1800   # instaladores largos (por defecto 900s)
 
 crisol install app.exe --interactive         # mostrar la UI del instalador
+crisol install portable.exe                  # .exe sin instalador: solo se registra
+crisol install portable.exe --execute        # forzar ejecución como prueba
 crisol install app.exe --vm                  # pasar directamente a la VM de Windows
 crisol install app.exe --vm-fallback         # si Wine falla, pasar a la VM
 
@@ -126,6 +128,32 @@ ejecuta con `sudo` el `bind-vfio.sh` generado. Necesitas IOMMU activado en el
 kernel (`amd_iommu=on iommu=pt` o `intel_iommu=on iommu=pt`) y grupos VFIO
 aislados; es hardware y configuración de arranque, no algo que Crisol pueda
 garantizar.
+
+## Ejecutables portables (Rufus y similares)
+
+Un `.exe` sin firma de instalador (tipo `PlainExe`) **no es un instalador**.
+Crisol no lo ejecuta durante `install`: lo copia a un prefijo aislado, crea el
+acceso directo y termina. Arráncalo cuando quieras con `crisol launch <id>`.
+
+```bash
+cd ~/Descargas
+crisol install rufus-4.16.exe     # registra; NO ejecuta
+crisol launch rufus-4-16-<hash>   # launch usando el ID que imprime Crisol
+```
+
+Esto evita un falso "instalación fallida" con utilidades portables. Aun así,
+**Rufus no funciona bajo Wine**: necesita Virtual Disk Service (VDS), un servicio
+de Windows que Wine no implementa. No existe un `winetricks` que lo corrija.
+Para grabar una ISO/USB de verdad usa Windows real:
+
+```bash
+crisol vm create windows --iso /ruta/Windows.iso
+crisol install ~/Descargas/rufus-4.16.exe --vm
+```
+
+Cuando se detecta el CLSID de VDS en un log, la receta interna
+`incompatible-vds` muestra este diagnóstico y detiene los reintentos en vez de
+gastar los 5 intentos. `action_retry = false` ahora se respeta.
 
 ## Panel de feedback
 
@@ -225,8 +253,8 @@ descubriste, y `crisol repair <id>` la aplicará.
 
 El directorio `community-recipes/` es el repositorio comunitario de recetas:
 cada app tiene su carpeta en `apps/<id>/` con un `recipe.recipe` y uno o más
-logs de ejemplo en `logs/`. **De las 7 recetas actuales, 6 usan fixtures
-anonimizados y 1 se basa en un log real redactado**: `community-recipes/REAL-LOGS.md` explica
+logs de ejemplo en `logs/`. **De las 8 recetas actuales, 6 usan fixtures
+anonimizados y 2 se basan en logs reales redactados**: `community-recipes/REAL-LOGS.md` explica
 cómo aportar más logs reales redactados (objetivo: 20 recetas verificadas). El
 `manifest.tsv` relaciona cada receta con la cadena que debe aparecer en su log y
 con la acción winetricks esperada.

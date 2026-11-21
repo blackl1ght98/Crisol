@@ -20,6 +20,8 @@ pub struct Report {
     pub attempts: usize,
     pub applied: Vec<String>,
     pub log_tail: String,
+    /// true si el archivo era un portable y solo se registró, sin ejecutarlo.
+    pub portable: bool,
 }
 
 fn now_secs() -> u64 {
@@ -222,6 +224,122 @@ fn log_tail(log: &str, n: usize) -> String {
     lines[from..].join("\n")
 }
 
+const VDS_CLSID: &str = "9c38ed61-d565-4728-aeee-c80952f0ecde";
+
+/// Incompatibilidades conocidas de Wine donde repetir o instalar DLL no sirve.
+/// Se usan para sustituir el genérico "no hay recetas" por una explicación
+/// accionable y para no gastar los 5 intentos en un fallo determinista.
+fn known_incompatibility(log: &str) -> Option<&'static str> {
+    let lower = log.to_lowercase();
+    if lower.contains(VDS_CLSID)
+        || lower.contains("virtual disk service")
+        || lower.contains("vdsldr.exe")
+    {
+        Some(
+            "Wine no implementa Virtual Disk Service (VDS). Las utilidades que\n\
+             gestionan discos o memorias USB no pueden funcionar bajo Wine y no\n\
+             existe un winetricks que lo corrija: usa Windows real con --vm.",
+        )
+    } else {
+        None
+    }
+}
+
+fn is_disk_tool(name: &str) -> bool {
+    let n = name.to_lowercase();
+    [
+        "rufus",
+        "etcher",
+        "balena",
+        "usb",
+        "disk",
+        "partition",
+        "hdd",
+        "format",
+    ]
+    .iter()
+    .any(|k| n.contains(k))
+}
+
+/// Un PE sin firma de instalador es portable: no se ejecuta como instalador.
+/// Se copia dentro de su prefijo aislado, se crea el acceso directo y se
+/// explica cómo arrancarlo. Así un `install` de Rufus no intenta hablar con VDS.
+fn install_portable(
+    paths: &Paths,
+    opts: &Options,
+    installer: &Path,
+    detection: &detector::Detection,
+    id: &str,
+    name: &str,
+) -> Result<Report, String> {
+    ui::header("Analizando ejecutable portable");
+    ui::info("Tipo: Portable (PE sin firma de instalador)");
+    ui::info(&format!("Arquitectura: {:?}", detection.arch));
+    ui::detail(&format!("Pistas: {}", detection.hints.join(", ")));
+    ui::warn(
+        "Los portables no se ejecutan durante la instalacion; se registran para lanzarlos despues.",
+    );
+
+    ui::step(1, 4, "Preparando prefijo aislado");
+    let prefix = prefix::create(paths, id, opts.sandbox)?;
+
+    ui::step(2, 4, "Copiando el portable al prefijo");
+    let dest_dir = prefix.path.join("drive_c").join("portables");
+    fs::create_dir_all(&dest_dir)
+        .map_err(|e| format!("No se pudo crear {}: {e}", dest_dir.display()))?;
+    let file_name = installer
+        .file_name()
+        .ok_or_else(|| format!("Nombre invalido: {}", installer.display()))?;
+    let dest = dest_dir.join(file_name);
+    fs::copy(installer, &dest)
+        .map_err(|e| format!("No se pudo copiar el portable a {}: {e}", dest.display()))?;
+    ui::ok(&format!("Copiado a {}", dest.display()));
+
+    ui::step(3, 4, "Registrando en el escritorio");
+    let exe_abs = dest.to_string_lossy().to_string();
+    let engine = resolve_engine(&opts.engine);
+    let entry = Entry {
+        id: id.to_string(),
+        name: name.to_string(),
+        exe: exe_abs.clone(),
+        args: String::new(),
+        prefix: prefix.path.to_string_lossy().to_string(),
+        installer: installer.to_string_lossy().to_string(),
+        icon: desktop::icon_for(paths, &dest, id),
+        engine,
+        created: now_secs(),
+        last_status: "portable".into(),
+        recipes: String::new(),
+    };
+    let desktop_file = desktop::write_app(paths, &entry)?;
+    ui::detail(&format!("Acceso directo: {}", desktop_file.display()));
+
+    ui::step(4, 4, "Guardando en el catalogo");
+    catalog::upsert(&paths.catalog, entry)?;
+
+    ui::ok(&format!("'{name}' registrado como portable. ID: {id}"));
+    ui::info(&format!("Lanzalo con: crisol launch {id}"));
+    if is_disk_tool(name) {
+        ui::warn("Esta utilidad gestiona discos: Wine no implementa Virtual Disk Service (VDS).");
+        ui::detail("Para grabar una USB/ISO de verdad usa: crisol install <archivo> --vm");
+        ui::detail("Si solo quieres ver si arranca: crisol install <archivo> --execute");
+    }
+    desktop::notify(
+        "Crisol",
+        &format!("{name} registrado como portable (no ejecutado)"),
+    );
+
+    Ok(Report {
+        id: id.to_string(),
+        name: name.to_string(),
+        exe: Some(exe_abs),
+        attempts: 0,
+        applied: Vec::new(),
+        log_tail: String::new(),
+        portable: true,
+    })
+}
+
 pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<Report, String> {
     let _ = opts.yes;
     let installer = fs::canonicalize(installer_path)
@@ -232,6 +350,10 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
         .file_stem()
         .map(|s| s.to_string_lossy().to_string())
         .unwrap_or_else(|| "app".into());
+
+    if detection.is_portable() && !opts.execute {
+        return install_portable(paths, opts, &installer, &detection, &id, &name);
+    }
 
     ui::header("Analizando instalador");
     ui::info(&format!("Tipo: {:?}", detection.kind));
@@ -322,8 +444,16 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
         let selected = recipe::select(&recipes, &ctx, &used, 3);
         if selected.is_empty() {
             ui::err("No hay recetas que coincidan con este fallo");
+            if let Some(msg) = known_incompatibility(&last_log) {
+                ui::warn(msg);
+            }
             break;
         }
+        // action_retry = false debe significar "no reintentes": antes se
+        // ignoraba y un fallo determinista agotaba los 5 intentos.
+        let wants_retry = selected
+            .iter()
+            .any(|r| r.actions.iter().any(|a| matches!(a, Action::Retry)));
 
         ui::step(3, 6, "Aplicando recetas de compatibilidad");
         for r in selected {
@@ -409,6 +539,10 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
                 }
             }
         }
+        if !wants_retry {
+            ui::info("La receta no pide reintentar: se detiene para no repetir un fallo conocido.");
+            break;
+        }
     }
 
     if !success {
@@ -425,12 +559,21 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
         );
         msg.push_str("\n\nEl prefijo se conserva en ");
         msg.push_str(&prefix.path.to_string_lossy());
+        if let Some(hint) = known_incompatibility(&last_log) {
+            msg.push_str("\n\n");
+            msg.push_str(hint);
+        }
+        if detection.is_portable() {
+            msg.push_str(
+                "\n\nEste .exe es portable: sin --execute solo se registra y no se prueba aqui.",
+            );
+        }
         if opts.vm_fallback {
             ui::info("Agotados los intentos: pasando el instalador a la VM de Windows...");
             let _ = crate::vm::handoff(paths, &installer);
         } else {
             ui::info(
-                "Si el fallo es por anti-cheat/DRM/drivers, un Windows real suele resolverlo:",
+                "Si el fallo es por anti-cheat/DRM/drivers o faltan servicios de Windows, un Windows real suele resolverlo:",
             );
             ui::detail("crisol vm create windows --iso /ruta/Windows.iso");
             ui::detail(&format!("crisol install {} --vm", installer.display()));
@@ -488,6 +631,7 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
         attempts,
         applied,
         log_tail: log_tail(&last_log, 10),
+        portable: false,
     })
 }
 
@@ -537,6 +681,7 @@ pub fn repair(paths: &Paths, id: &str) -> Result<(), String> {
         timeout_secs: 900,
         exe: None,
         interactive: false,
+        execute: false,
         vm: false,
         vm_fallback: false,
         iso: None,
@@ -722,6 +867,17 @@ mod tests {
             arch: Arch::X64,
             hints: Vec::new(),
         }
+    }
+
+    #[test]
+    fn vds_failure_has_actionable_message() {
+        let log =
+            "err:ole:create_server class {9C38ED61-D565-4728-AEEE-C80952F0ECDE} not registered";
+        let msg = known_incompatibility(log).expect("debe detectar VDS");
+        assert!(msg.contains("Virtual Disk Service"));
+        assert!(known_incompatibility("err:module:import_dll msvcp140.dll").is_none());
+        assert!(is_disk_tool("rufus-4.16"));
+        assert!(!is_disk_tool("notepad"));
     }
 
     #[test]

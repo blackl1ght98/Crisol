@@ -19,8 +19,9 @@ de Rust: cualquier mejora en recetas, documentación o empaquetado es bienvenida
    hostnames. Los logs de Crisol están en
    `~/.local/share/crisol/logs/<id>-<intentos>.log`.
 5. **Se priorizan los logs reales sobre las recetas especulativas.** Consulta
-   `community-recipes/REAL-LOGS.md`: 6 de los 7 fixtures actuales son ejemplos
-   anonimizados y no cuentan como evidencia. El objetivo es llegar a 20 recetas
+   `community-recipes/REAL-LOGS.md`: 6 de los 8 fixtures actuales son ejemplos
+   anonimizados y no cuentan como evidencia; 2 recetas sí usan logs reales
+   redactados. El objetivo es llegar a 20 recetas
    con logs reales verificados.
 
 ## 2. Añadir una receta de la comunidad
@@ -39,7 +40,7 @@ Crea ahí:
 * `logs/<fixture>.log`: fragmento **real** de 10-30 líneas del log de Wine que
   disparó la receta, **redactado con `tools/redact-log.sh` y revisado a mano**
   (usa nombres genéricos de aplicación; nada de usuarios, rutas personales, IPs,
-  MACs, claves ni datos de terceros). Los 6 fixtures sintéticos actuales son y
+  MACs, claves ni datos de terceros). Los 6 fixtures sintéticos actuales son
   anonimizados: no los presentes como logs reales ni los copies como prueba.
 
 Después añade una fila a `community-recipes/manifest.tsv` con cinco columnas

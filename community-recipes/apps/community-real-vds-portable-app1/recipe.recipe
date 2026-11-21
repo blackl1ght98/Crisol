@@ -1,0 +1,8 @@
+# Receta basada en un log REAL redactado de un portable (Rufus) bajo Wine.
+# No hay winetricks que implemente Virtual Disk Service: solo diagnóstico.
+[community-real-vds-portable-app1]
+confidence = 0.95
+priority = 30
+match_log_any = 9c38ed61-d565-4728-aeee-c80952f0ecde
+action_message = Wine no implementa Virtual Disk Service (VDS). Esta utilidad necesita Windows real con acceso a disco; usa 'crisol install <archivo> --vm'. No se reintentara.
+action_retry = false

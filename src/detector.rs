@@ -27,6 +27,14 @@ pub struct Detection {
     pub hints: Vec<String>,
 }
 
+impl Detection {
+    /// Un PE sin firma de instalador es un portable candidato: conviene
+    /// registrarlo y lanzarlo bajo demanda en vez de ejecutarlo como instalador.
+    pub fn is_portable(&self) -> bool {
+        matches!(self.kind, InstallerKind::PlainExe | InstallerKind::Unknown)
+    }
+}
+
 fn contains_ci(haystack: &[u8], needle: &[u8]) -> bool {
     if needle.is_empty() {
         return true;
@@ -121,6 +129,9 @@ pub fn detect(path: &Path) -> Result<Detection, String> {
     if is_msi {
         hints.push("msi".to_string());
     }
+    if kind == InstallerKind::PlainExe {
+        hints.push("portable".to_string());
+    }
     match arch {
         Arch::X86 => hints.push("x86".to_string()),
         Arch::X64 => hints.push("x64".to_string()),
@@ -152,6 +163,25 @@ mod tests {
         let d = detect(&p).unwrap();
         assert_eq!(d.kind, InstallerKind::Msi);
         assert!(d.hints.iter().any(|h| h == "msi"));
+        fs::remove_file(&p).unwrap();
+    }
+
+    #[test]
+    fn detects_plain_exe_as_portable() {
+        let dir = std::env::temp_dir().join("crisol_test_portable");
+        fs::create_dir_all(&dir).unwrap();
+        let p = dir.join("app.exe");
+        let mut data = vec![0u8; 256];
+        data[..2].copy_from_slice(b"MZ");
+        data[0x3c..0x40].copy_from_slice(&0x80u32.to_le_bytes());
+        data[0x80..0x84].copy_from_slice(b"PE\0\0");
+        data[0x84..0x86].copy_from_slice(&0x8664u16.to_le_bytes());
+        fs::write(&p, data).unwrap();
+        let d = detect(&p).unwrap();
+        assert_eq!(d.kind, InstallerKind::PlainExe);
+        assert_eq!(d.arch, Arch::X64);
+        assert!(d.is_portable());
+        assert!(d.hints.iter().any(|h| h == "portable"));
         fs::remove_file(&p).unwrap();
     }
 

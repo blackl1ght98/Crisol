@@ -127,3 +127,12 @@ match_log_any = wine mono, wine-gecko, gecko installer, mono-2.0
 action_env = WINEDLLOVERRIDES=mscoree,mshtml=
 action_message = Desactivando los asistentes de Mono/Gecko...
 action_retry = true
+
+# VDS no existe en Wine: reintentar o instalar DLL no ayuda. action_retry=false
+# hace que el motor se detenga tras mostrar el mensaje (antes se ignoraba).
+[incompatible-vds]
+confidence = 0.95
+priority = 30
+match_log_any = 9c38ed61-d565-4728-aeee-c80952f0ecde, vdsldr.exe, virtual disk service
+action_message = Wine no implementa Virtual Disk Service (VDS): esta utilidad necesita Windows real con acceso a disco. No hay winetricks que lo corrija; usa 'crisol install <archivo> --vm'. No se reintentara.
+action_retry = false
