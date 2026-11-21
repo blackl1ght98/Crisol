@@ -698,10 +698,12 @@ pub fn launch(paths: &Paths, id: &str, force: bool, vm_mode: bool) -> Result<(),
     if launch_incompatibility(entry) && !force {
         let msg = format!(
             "{} no puede arrancar bajo Wine: Wine no implementa Virtual Disk Service (VDS).\n\
-             No se ha lanzado nada. Opciones:\n\
-             - Windows real: crisol install '{}' --vm  (necesita QEMU e ISO de Windows)\n\
-             - Forzar el intento (probablemente falle): crisol launch {} --force",
-            entry.name, entry.installer, entry.id
+             No se ha lanzado nada. Elige una opcion:\n\
+             1) Preparar Windows (recomendado; te dira los comandos exactos):\n\
+                crisol launch {} --vm\n\
+                (equivalente: crisol install '{}' --vm)\n\
+             2) Forzar el intento (probablemente falle): crisol launch {} --force",
+            entry.name, entry.id, entry.installer, entry.id
         );
         ui::header("App incompatible con Wine");
         ui::warn(&msg);

@@ -262,6 +262,7 @@ if launch_out="$(PATH="$TMP_ROOT/bin:$PATH" "$BIN" launch "$portable_id" 2>&1)";
   fail "launch debería bloquear la app incompatible"
 fi
 grep -q 'Virtual Disk Service' <<<"$launch_out" || fail "falta la explicación VDS en launch"
+grep -q -- '--vm' <<<"$launch_out" || fail "launch no ofrece --vm como primera opción"
 grep -q -- '--force' <<<"$launch_out" || fail "launch no ofrece --force"
 [[ ! -s "$CRISOL_TEST_WINE_CALLS" ]] || fail "se llamó a wine sin --force"
 ok "launch bloquea la app VDS antes de ejecutar wine"
@@ -284,6 +285,7 @@ fi
 grep -q 'Como continuar' <<<"$vm_out" || fail "launch --vm no explica cómo continuar"
 grep -q 'crisol vm start windows' <<<"$vm_out" || fail "falta el comando para arrancar la VM"
 grep -q 'INSTALAR.cmd' <<<"$vm_out" || fail "faltan las instrucciones dentro del guest"
+grep -q 'BLOQUE PARA COPIAR' <<<"$vm_out" || fail "falta el bloque listo para copiar/pegar"
 vm_share="$XDG_DATA_HOME/crisol/vms/windows/share"
 [[ -f "$vm_share/rufus-test.exe" ]] || fail "launch --vm no copió el instalador al share"
 [[ -f "$vm_share/INSTALAR.cmd" ]] || fail "launch --vm no generó INSTALAR.cmd"

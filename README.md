@@ -166,8 +166,10 @@ crisol install ~/Descargas/rufus-4.16.exe --vm
 # equivalente: crisol launch rufus-4-16-<hash> --vm
 ```
 
-Después de `install --vm` (o `launch --vm`) Crisol imprime los pasos restantes,
-porque no puede arrancar Windows ni hacer clic dentro del guest:
+Después de `install --vm` (o `launch --vm`) Crisol imprime los pasos restantes y
+dos bloques **listos para copiar y pegar** (uno para tu terminal, otro para el
+Símbolo del sistema de Windows), porque no puede arrancar Windows ni hacer clic
+dentro del guest:
 
 ```bash
 crisol vm doctor                      # QEMU, /dev/kvm, OVMF

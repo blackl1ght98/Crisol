@@ -362,17 +362,33 @@ fn print_next_steps(paths: &Paths, vm: &str, exe: &Path, cmd: &Path) {
         "3) Si es la primera vez, instala Windows desde la ISO y los drivers virtio (virtio-win).",
     );
 
-    ui::info("4) Dentro de Windows abre un Simbolo del sistema y ejecuta, linea a linea:");
+    ui::info("4) Dentro de Windows abre un Simbolo del sistema y ejecuta el bloque final.");
+
+    ui::info(&format!(
+        "5) El archivo {exe_name} ya esta en Z:\\ y se abrira desde ahi."
+    ));
+
+    ui::info("--- BLOQUE PARA COPIAR: AQUI (si algo falta, ejecuta estas lineas) ---");
+    ui::detail("crisol vm doctor");
+    ui::detail("crisol vm setup");
+    ui::detail(&format!(
+        "sudo {}   # pide contraseña; Crisol no lo ejecuta",
+        vms_dir(paths).join("setup-vm.sh").display()
+    ));
+    ui::detail("newgrp kvm   # o cierra sesion y vuelve a entrar");
+    ui::detail(&format!(
+        "crisol vm create {vm} --iso /ruta/Windows.iso --ram 8 --disk 60"
+    ));
+    ui::detail(&format!("crisol vm start {vm}"));
+
+    ui::info("--- BLOQUE PARA COPIAR: DENTRO DE WINDOWS (Simbolo del sistema) ---");
     ui::detail("net use Z: \\\\.\\crisol");
     ui::detail("Z:");
     ui::detail("cd \\");
     ui::detail(&cmd_name);
     ui::detail("   (tambien puedes hacer doble clic en Z:\\INSTALAR.cmd)");
 
-    ui::info(&format!(
-        "5) El archivo {exe_name} ya esta en Z:\\ y se abrira desde ahi."
-    ));
-    ui::detail("Si la VM no arranca, ejecuta 'crisol vm doctor' y comparte el resultado.");
+    ui::info("Si la VM no arranca, ejecuta 'crisol vm doctor' y comparte el resultado.");
 }
 
 fn install_into(paths: &Paths, name: &str, exe: &Path) -> Result<(), String> {

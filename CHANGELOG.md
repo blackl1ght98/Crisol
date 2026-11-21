@@ -2,8 +2,8 @@
 
 Todos los cambios notables de Crisol. El formato sigue en líneas generales
 [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Hay dos versiones
-publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.1.3` y `v0.1.4`, con tarball
-fuente, binario y `SHA256SUMS`.
+publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.1.3`, `v0.1.4` y `v0.1.5`, con
+tarball fuente, binario y `SHA256SUMS`.
 
 ## [Unreleased]
 
@@ -12,6 +12,22 @@ fuente, binario y `SHA256SUMS`.
 * Logs reales verificados para recetas comunitarias (objetivo: 20). Campaña en
   `community-recipes/REAL-LOGS.md`.
 * Arranque real de una VM y envío de los borradores de `docs/UPSTREAM.md`.
+
+## [0.1.5]
+
+### Añadido
+
+* El aviso de incompatibilidad VDS muestra `crisol launch <id> --vm` como
+  primera opción, antes que `--force`, para que el usuario no tenga que
+  interpretar el mensaje.
+* La guía de la VM termina con dos **bloques listos para copiar y pegar**: los
+  comandos de la terminal host (`vm doctor`, `vm setup`, `sudo ...setup-vm.sh`,
+  `newgrp kvm`, `vm create`, `vm start`) y las líneas del Símbolo del sistema de
+  Windows (`net use Z: \\.\crisol`, `Z:`, `cd \`, `INSTALAR.cmd`).
+
+### Pruebas
+
+* `tests/integration.sh` verifica ambos bloques y que el aviso VDS ofrece `--vm`.
 
 ## [0.1.4]
 
