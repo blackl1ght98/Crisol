@@ -72,6 +72,8 @@ run_cmd "crisol recipes" "$BIN" recipes
 # --disk se limita a 10 GB en la CLI; sin qemu-img debe avisar y terminar 0.
 run_cmd "crisol vm create vm-ci --ram 1 --disk 1 (sin QEMU)" \
   "$BIN" vm create vm-ci --ram 1 --disk 1
+run_cmd "crisol vm create windows (para el handoff --vm)" \
+  "$BIN" vm create windows --ram 1 --disk 1
 run_cmd "crisol vm list" "$BIN" vm list
 
 [[ -f "$VM_DIR/start.sh" ]] || fail "falta $VM_DIR/start.sh"
@@ -271,6 +273,22 @@ if ! launch_out="$(PATH="$TMP_ROOT/bin:$PATH" "$BIN" launch "$portable_id" --for
 fi
 [[ -s "$CRISOL_TEST_WINE_CALLS" ]] || fail "wine no fue llamado con --force"
 ok "launch --force ejecuta wine (el usuario asume el riesgo)"
+
+# launch --vm: prepara el instalador en la VM y deja instrucciones completas.
+: > "$CRISOL_TEST_WINE_CALLS"
+printf '\n==> Preparando el portable en la VM con launch --vm\n'
+if ! vm_out="$(PATH="$TMP_ROOT/bin:$PATH" "$BIN" launch "$portable_id" --vm 2>&1)"; then
+  printf '%s\n' "$vm_out" >&2
+  fail "launch --vm falló"
+fi
+grep -q 'Como continuar' <<<"$vm_out" || fail "launch --vm no explica cómo continuar"
+grep -q 'crisol vm start windows' <<<"$vm_out" || fail "falta el comando para arrancar la VM"
+grep -q 'INSTALAR.cmd' <<<"$vm_out" || fail "faltan las instrucciones dentro del guest"
+vm_share="$XDG_DATA_HOME/crisol/vms/windows/share"
+[[ -f "$vm_share/rufus-test.exe" ]] || fail "launch --vm no copió el instalador al share"
+[[ -f "$vm_share/INSTALAR.cmd" ]] || fail "launch --vm no generó INSTALAR.cmd"
+[[ ! -s "$CRISOL_TEST_WINE_CALLS" ]] || fail "launch --vm llamó a wine"
+ok "launch --vm copia el instalador y muestra los pasos sin Wine"
 
 grep -q 'incompatible-vds' "$ROOT/recipes/core.recipe" || fail "falta la receta VDS en core.recipe"
 "$BIN" --json recipes | grep -q 'incompatible-vds' || fail "la receta VDS no aparece en crisol --json recipes"

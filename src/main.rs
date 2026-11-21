@@ -91,7 +91,7 @@ fn main() {
                 }
             }
         }
-        Command::Launch(id, force) => match engine::launch(&paths, &id, force) {
+        Command::Launch(id, force, vm_mode) => match engine::launch(&paths, &id, force, vm_mode) {
             Ok(()) => 0,
             Err(e) => {
                 ui::err(&e);

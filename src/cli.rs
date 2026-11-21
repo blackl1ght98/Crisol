@@ -50,8 +50,8 @@ pub enum Command {
     App(u16),
     Completions(String),
     Install(PathBuf, Options),
-    /// ID de la app y permiso explícito para lanzar una app incompatible.
-    Launch(String, bool),
+    /// ID de la app, permiso explícito para forzar y modo VM (prepara el instalador).
+    Launch(String, bool, bool),
     List,
     ListJson,
     Remove(String),
@@ -275,7 +275,7 @@ pub fn parse(args: Vec<String>) -> Command {
         "app" | "ui" => Command::App(opts.port),
         "completions" => arg.map(Command::Completions).unwrap_or(Command::Help),
         "launch" | "run" => arg
-            .map(|id| Command::Launch(id, force))
+            .map(|id| Command::Launch(id, force, opts.vm))
             .unwrap_or(Command::Help),
         "remove" | "rm" | "uninstall" => arg.map(Command::Remove).unwrap_or(Command::Help),
         "repair" => arg.map(Command::Repair).unwrap_or(Command::Help),
@@ -313,6 +313,7 @@ pub fn print_help() {
          USO\n\
            crisol install <archivo.exe|archivo.msi> [opciones]\n\
            crisol launch <id> [--force]   Ejecuta una app instalada\n\
+           crisol launch <id> --vm       Prepara su instalador en la VM de Windows\n\
            crisol list                    Muestra el catalogo\n\
            crisol repair <id>             Repite la instalacion/receta de una app\n\
            crisol remove <id>             Borra la app y su prefijo\n\

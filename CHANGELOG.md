@@ -2,8 +2,8 @@
 
 Todos los cambios notables de Crisol. El formato sigue en líneas generales
 [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Hay dos versiones
-publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2` y `v0.1.3`, con tarball fuente,
-binario y `SHA256SUMS`.
+publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.1.3` y `v0.1.4`, con tarball
+fuente, binario y `SHA256SUMS`.
 
 ## [Unreleased]
 
@@ -12,6 +12,29 @@ binario y `SHA256SUMS`.
 * Logs reales verificados para recetas comunitarias (objetivo: 20). Campaña en
   `community-recipes/REAL-LOGS.md`.
 * Arranque real de una VM y envío de los borradores de `docs/UPSTREAM.md`.
+
+## [0.1.4]
+
+### Añadido
+
+* `crisol launch <id> --vm`: prepara el instalador original de la app en la VM
+  `windows` en vez de ignorar la opción. Es la forma corta de
+  `crisol install <instalador> --vm`.
+* Tras preparar una VM, la salida muestra **cómo continuar** paso a paso:
+  `crisol vm doctor`, `crisol vm setup` si falta QEMU o `/dev/kvm`,
+  `crisol vm start windows` y las líneas exactas para montar `Z:\` y ejecutar
+  `INSTALAR.cmd` dentro de Windows. El `.cmd` generado también muestra el
+  resultado y deja la ventana abierta.
+
+### Corregido
+
+* `crisol install --vm` ya no termina con una sola línea ambigua; avisa cuando
+  la máquina aún no puede arrancar y dice qué falta.
+
+### Pruebas
+
+* `tests/integration.sh` comprueba que `launch <id> --vm` copia el instalador al
+  `share/` de la VM y muestra los pasos, sin llamar a Wine.
 
 ## [0.1.3]
 

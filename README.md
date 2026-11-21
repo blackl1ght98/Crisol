@@ -48,6 +48,7 @@ crisol install app.exe --vm-fallback         # si Wine falla, pasar a la VM
 
 crisol list                 # apps instaladas
 crisol launch <id>          # ejecutar (apps VDS: exige --force, ver abajo)
+crisol launch <id> --vm     # preparar su instalador en la VM de Windows
 crisol repair <id>          # volver a intentar con recetas
 crisol remove <id>          # borrar app y prefijo
 crisol recipes              # recetas cargadas (con la confianza actual)
@@ -162,7 +163,30 @@ verdad necesitas la VM con Windows:
 ```bash
 crisol vm create windows --iso /ruta/Windows.iso
 crisol install ~/Descargas/rufus-4.16.exe --vm
+# equivalente: crisol launch rufus-4-16-<hash> --vm
 ```
+
+Después de `install --vm` (o `launch --vm`) Crisol imprime los pasos restantes,
+porque no puede arrancar Windows ni hacer clic dentro del guest:
+
+```bash
+crisol vm doctor                      # QEMU, /dev/kvm, OVMF
+crisol vm setup                       # si falta QEMU: genera un script; ejecútalo con sudo
+crisol vm start windows               # arranca la VM
+```
+
+Dentro de Windows, abre un Símbolo del sistema y ejecuta:
+
+```bat
+net use Z: \\.\crisol
+Z:
+cd \
+INSTALAR.cmd
+```
+
+El archivo ya está en `Z:\` y `INSTALAR.cmd` muestra el resultado y deja la
+ventana abierta. Si es la primera vez, instala Windows desde la ISO y los
+drivers virtio antes de ejecutar el script.
 
 Cuando se detecta el CLSID de VDS (o un `page fault`) en un log, la receta
 interna `incompatible-vds` muestra este diagnóstico y detiene los reintentos en

@@ -304,6 +304,7 @@ pub fn handoff(paths: &Paths, exe: &Path) -> Result<(), String> {
         ui::warn("No existe la VM por defecto 'windows'");
         ui::info("Crea primero una VM con una ISO de Windows:");
         ui::detail("crisol vm create windows --iso /ruta/Windows.iso --ram 8 --disk 60");
+        ui::detail("crisol vm doctor        # comprueba QEMU, /dev/kvm y OVMF");
         ui::info("Después vuelve a ejecutar: crisol install <archivo> --vm");
         return Ok(());
     }
@@ -318,28 +319,93 @@ pub fn install(paths: &Paths, name: &str, exe: &Path) -> Result<(), String> {
     install_into(paths, name, exe)
 }
 
+/// Imprime el camino completo desde aquí hasta ejecutar el archivo en Windows.
+/// Crisol no puede arrancar Windows ni hacer clic dentro del guest, así que los
+/// pasos tienen que ser explícitos y copiables; un simple "ya está copiado"
+/// deja al usuario sin saber qué hacer.
+fn print_next_steps(paths: &Paths, vm: &str, exe: &Path, cmd: &Path) {
+    let dir = vm_dir(paths, vm);
+    let exe_name = exe
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let cmd_name = cmd
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| "INSTALAR.cmd".into());
+
+    ui::header("Como continuar en la VM");
+
+    ui::info("1) Comprueba el entorno (solo la primera vez):");
+    ui::detail("crisol vm doctor");
+    if runner::which("qemu-system-x86_64").is_none() {
+        ui::warn("Falta QEMU: ejecuta 'crisol vm setup' y después el script que indica CON sudo (pide contraseña).");
+    }
+    if !is_kvm_available() {
+        ui::warn("Falta /dev/kvm: la VM irá muy lenta. Usa 'crisol vm setup' y vuelve a entrar en sesión.");
+    }
+    let disk = dir.join("disk.qcow2");
+    if !disk.exists() {
+        ui::warn(&format!(
+            "Falta {}: crisol vm create {vm} --iso /ruta/Windows.iso --ram 8 --disk 60",
+            disk.display()
+        ));
+    }
+
+    ui::info(&format!("2) Arranca Windows: crisol vm start {vm}"));
+    ui::detail(&format!(
+        "   Alternativa: {}",
+        dir.join("start.sh").display()
+    ));
+
+    ui::info(
+        "3) Si es la primera vez, instala Windows desde la ISO y los drivers virtio (virtio-win).",
+    );
+
+    ui::info("4) Dentro de Windows abre un Simbolo del sistema y ejecuta, linea a linea:");
+    ui::detail("net use Z: \\\\.\\crisol");
+    ui::detail("Z:");
+    ui::detail("cd \\");
+    ui::detail(&cmd_name);
+    ui::detail("   (tambien puedes hacer doble clic en Z:\\INSTALAR.cmd)");
+
+    ui::info(&format!(
+        "5) El archivo {exe_name} ya esta en Z:\\ y se abrira desde ahi."
+    ));
+    ui::detail("Si la VM no arranca, ejecuta 'crisol vm doctor' y comparte el resultado.");
+}
+
 fn install_into(paths: &Paths, name: &str, exe: &Path) -> Result<(), String> {
     let exe = fs::canonicalize(exe).unwrap_or_else(|_| exe.to_path_buf());
     let dir = vm_dir(paths, name);
     let share = dir.join("share");
     fs::create_dir_all(&share).ok();
-    let name = exe
+    let file_name = exe
         .file_name()
         .map(|s| s.to_string_lossy().to_string())
         .ok_or_else(|| "El archivo no tiene nombre".to_string())?;
-    let dest = share.join(&name);
+    let dest = share.join(&file_name);
     fs::copy(&exe, &dest).map_err(|e| format!("No se pudo copiar a la VM: {e}"))?;
     let cmd = share.join("INSTALAR.cmd");
+    let command = install_command(&exe);
     let _ = fs::write(
         &cmd,
         format!(
-            "@echo off\nnet use Z: \\\\.\\crisol >nul 2>&1\ncd /d Z:\\\nstart \"\" {}\n",
-            install_command(&exe)
+            "@echo off\n\
+             net use Z: \\\\.\\crisol >nul 2>&1\n\
+             cd /d Z:\\\n\
+             echo Preparando {file_name}...\n\
+             {command}\n\
+             echo Resultado: %ERRORLEVEL%\n\
+             pause\n"
         ),
     );
     ui::ok(&format!("Instalador copiado a {}", dest.display()));
-    ui::info("Arranca la VM (crisol vm start windows), instala los drivers virtio y ejecuta Z:\\INSTALAR.cmd");
-    ui::detail("Si el anti-cheat exige GPU passthrough, usa --gpu-pci al crear la VM");
+    ui::ok(&format!("Script generado: {}", cmd.display()));
+    if !is_kvm_available() || runner::which("qemu-system-x86_64").is_none() {
+        ui::warn("Esta maquina aun no puede arrancar la VM; revisa el paso 1.");
+    }
+    print_next_steps(paths, name, &dest, &cmd);
     Ok(())
 }
 

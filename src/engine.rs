@@ -7,6 +7,7 @@ use crate::prefix::{self, Prefix};
 use crate::recipe::{self, Action, MatchCtx};
 use crate::runner::{self, RunOptions};
 use crate::ui;
+use crate::vm;
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -664,12 +665,31 @@ fn launch_incompatibility(entry: &catalog::Entry) -> bool {
         .unwrap_or(false)
 }
 
-pub fn launch(paths: &Paths, id: &str, force: bool) -> Result<(), String> {
+pub fn launch(paths: &Paths, id: &str, force: bool, vm_mode: bool) -> Result<(), String> {
     let entries = catalog::load(&paths.catalog);
     let entry = entries
         .iter()
         .find(|e| e.id == id)
         .ok_or_else(|| format!("No hay ninguna app con id '{id}'"))?;
+
+    // `launch --vm` no es un alias de Wine: prepara el instalador original en
+    // la VM por defecto y deja los pasos para continuar dentro de Windows.
+    if vm_mode {
+        ui::header("Preparando la app en la VM de Windows");
+        ui::info(
+            "launch --vm no ejecuta Wine: copia el instalador a la VM y explica como continuar.",
+        );
+        let installer = PathBuf::from(&entry.installer);
+        if entry.installer.is_empty() || !installer.exists() {
+            return Err(format!(
+                "No se encontro el instalador original de '{}' ({}).\n\
+                 Vuelve a ejecutar: crisol install '<ruta-al-instalador>' --vm",
+                entry.name, entry.installer
+            ));
+        }
+        return vm::handoff(paths, &installer);
+    }
+
     let exe = PathBuf::from(&entry.exe);
     if !exe.exists() {
         return Err(format!("El ejecutable ya no existe: {}", exe.display()));
