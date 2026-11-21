@@ -163,8 +163,22 @@ crisol install ~/Descargas/rufus-4.16.exe --vm   # Windows real (recomendado)
 crisol launch rufus-4-16-<hash> --force          # forzar; confirma el fallo
 ```
 
-`--force` solo ignora el aviso: no arregla VDS. Para grabar una ISO/USB de
-verdad necesitas la VM con Windows:
+`--force` solo ignora el aviso: no arregla VDS. Wine no expone los discos como
+`\\.\PhysicalDrive` ni el almacenamiento USB de Windows: incluso si se simulara
+VDS, Rufus no vería la memoria USB (bugs de WineHQ 38309 y 37166; el autor de
+Rufus considera Wine incompatible). No es una laguna de esta versión ni algo que
+un `winetricks` pueda añadir.
+
+Si solo quieres **grabar una ISO en una USB**, en Linux tienes alternativas
+nativas y no necesitas Rufus ni Windows:
+
+* **balenaEtcher**: AppImage, interfaz parecida, se ejecuta en Linux.
+* **Ventoy**: deja la USB con múltiples ISO; solo copias los archivos.
+* **WoeUSB**: para crear instaladores de Windows.
+
+`dd if=iso of=/dev/sdX` también funciona, pero es destructivo y exige `sudo`;
+Crisol no lo ejecuta por ti. Si necesitas **Rufus en concreto**, usa la VM con
+Windows:
 
 ```bash
 crisol vm create windows --iso /ruta/Windows.iso

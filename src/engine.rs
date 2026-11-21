@@ -237,9 +237,11 @@ fn known_incompatibility(log: &str) -> Option<&'static str> {
         || lower.contains("vdsldr.exe")
     {
         Some(
-            "Wine no implementa Virtual Disk Service (VDS). Las utilidades que\n\
-             gestionan discos o memorias USB no pueden funcionar bajo Wine y no\n\
-             existe un winetricks que lo corrija: usa Windows real con --vm.",
+            "Wine no implementa Virtual Disk Service (VDS) ni expone los discos\n\
+             como \\\\.\\PhysicalDrive. Las utilidades que gestionan discos o\n\
+             memorias USB no pueden funcionar bajo Wine y no hay winetricks que\n\
+             lo corrija. En Linux usa balenaEtcher (AppImage), Ventoy o WoeUSB;\n\
+             si necesitas Rufus, usa Windows real con --vm.",
         )
     } else if lower.contains("unhandled exception") || lower.contains("page fault") {
         Some(
@@ -699,10 +701,12 @@ pub fn launch(paths: &Paths, id: &str, force: bool, vm_mode: bool) -> Result<(),
         let msg = format!(
             "{} no puede arrancar bajo Wine: Wine no implementa Virtual Disk Service (VDS).\n\
              No se ha lanzado nada. Elige una opcion:\n\
-             1) Preparar Windows (recomendado; te dira los comandos exactos):\n\
+             1) Windows real (unico modo de usar Rufus; te dira los comandos):\n\
                 crisol launch {} --vm\n\
                 (equivalente: crisol install '{}' --vm)\n\
-             2) Forzar el intento (probablemente falle): crisol launch {} --force",
+             2) En Linux, sin Windows: balenaEtcher (AppImage), Ventoy o WoeUSB.\n\
+                Crisol no los instala: instálalos con tu gestor o su AppImage.\n\
+             3) Forzar el intento (casi seguro que falle): crisol launch {} --force",
             entry.name, entry.id, entry.installer, entry.id
         );
         ui::header("App incompatible con Wine");

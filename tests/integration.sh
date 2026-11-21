@@ -280,6 +280,7 @@ if launch_out="$(PATH="$TMP_ROOT/bin:$PATH" "$BIN" launch "$portable_id" 2>&1)";
 fi
 grep -q 'Virtual Disk Service' <<<"$launch_out" || fail "falta la explicación VDS en launch"
 grep -q -- '--vm' <<<"$launch_out" || fail "launch no ofrece --vm como primera opción"
+grep -q 'balenaEtcher' <<<"$launch_out" || fail "launch no ofrece alternativas nativas de Linux"
 grep -q -- '--force' <<<"$launch_out" || fail "launch no ofrece --force"
 [[ ! -s "$CRISOL_TEST_WINE_CALLS" ]] || fail "se llamó a wine sin --force"
 ok "launch bloquea la app VDS antes de ejecutar wine"

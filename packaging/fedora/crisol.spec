@@ -4,7 +4,7 @@
 # sustituir esto por un tarball con etiqueta y checksum como Source0.
 %global upstream_url https://github.com/blackl1ght98/Crisol
 Name:           crisol
-Version:        0.1.9
+Version:        0.1.10
 Release:        1%{?dist}
 Summary:        Capa de orquestación de compatibilidad sobre Wine para instalar .exe/.msi
 License:        MIT

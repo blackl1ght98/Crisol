@@ -3,8 +3,8 @@
 Todos los cambios notables de Crisol. El formato sigue en líneas generales
 [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Hay dos versiones
 publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.1.3`, `v0.1.4`, `v0.1.5`,
-`v0.1.6`, `v0.1.7`, `v0.1.8` y `v0.1.9`, con tarball fuente, binario y
-`SHA256SUMS`.
+`v0.1.6`, `v0.1.7`, `v0.1.8`, `v0.1.9` y `v0.1.10`, con tarball fuente,
+binario y `SHA256SUMS`.
 
 ## [Unreleased]
 
@@ -13,6 +13,21 @@ publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.1.3`, `v0.1.4`, `v0.1.5`,
 * Logs reales verificados para recetas comunitarias (objetivo: 20). Campaña en
   `community-recipes/REAL-LOGS.md`.
 * Arranque real de una VM y envío de los borradores de `docs/UPSTREAM.md`.
+
+## [0.1.10]
+
+### Añadido
+
+* El aviso para utilidades de disco ofrece ahora una tercera vía además de la
+  VM y `--force`: alternativas nativas de Linux (balenaEtcher, Ventoy, WoeUSB)
+  para cuando solo se quiere grabar una ISO. La documentación explica por qué
+  Rufus en concreto no puede funcionar bajo Wine (sin VDS ni acceso a
+  `\\.\PhysicalDrive`; WineHQ 38309 y 37166).
+
+### Pruebas
+
+* `tests/integration.sh` comprueba que el aviso menciona las alternativas
+  nativas.
 
 ## [0.1.9]
 
