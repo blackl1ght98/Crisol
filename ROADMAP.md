@@ -7,7 +7,7 @@ este repositorio; no implica que esté publicado o validado en producción.
 | --- | --- | --- | --- |
 | 1 | Logs reales y recetas validadas | **En curso** | Conseguir 20 recetas con logs reales verificados; hoy hay 2 y 6 fixtures anonimizados. |
 | 2 | CI activo | **Bloqueado por permisos** | El workflow está en el repo local; subirlo con un PAT que tenga scope `workflow` y verificar los jobs. |
-| 3 | Release con tag y checksums | **Hecho** | `v0.1.0` a `v0.1.6` publicados con tarball, binario y `SHA256SUMS`. |
+| 3 | Release con tag y checksums | **Hecho** | `v0.1.0` a `v0.1.7` publicados con tarball, binario y `SHA256SUMS`. |
 | 4 | Verificación de paquetes | **Parcial** | `tools/check-packaging.sh` pasa; construir paquetes reales con `makepkg`, `rpmbuild` y `flatpak-builder`. |
 | 5 | Arranque real de VM | **Pendiente** | Instalar QEMU, arrancar Windows y probar `--vm` / `--vm-fallback` de extremo a extremo. |
 | 6 | PRs aguas arriba | **Pendiente** | Enviar los borradores de `docs/UPSTREAM.md` a winetricks, Bottles y Lutris. |
@@ -45,7 +45,7 @@ comprobar que el badge está en verde y que no hay jobs omitidos.
 
 ## 3. Release con tag y checksums — HECHO
 
-Tags `v0.1.0` a `v0.1.6` publicados con notas desde `CHANGELOG.md`,
+Tags `v0.1.0` a `v0.1.7` publicados con notas desde `CHANGELOG.md`,
 tarball fuente, binario x86_64 y `SHA256SUMS` verificable.
 
 ## 4. Verificación de paquetes — PARCIAL

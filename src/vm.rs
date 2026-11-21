@@ -21,6 +21,17 @@ fn is_kvm_available() -> bool {
     Path::new("/dev/kvm").exists()
 }
 
+/// Muestra las rutas de datos del usuario con `~` para que el comando copiable
+/// sea corto. El shell expande `~` antes de ejecutar `sudo`, así que funciona.
+fn short_path(paths: &Paths, path: &Path) -> String {
+    let full = path.to_string_lossy();
+    let home = paths.home.to_string_lossy();
+    match full.strip_prefix(home.as_ref()) {
+        Some(rest) if rest.starts_with('/') => format!("~{rest}"),
+        _ => full.to_string(),
+    }
+}
+
 fn ovmf_path() -> String {
     for candidate in [
         "/usr/share/ovmf/x64/OVMF.fd",
@@ -115,8 +126,8 @@ echo 'Despues: newgrp kvm  o  cerrar sesion y volver a entrar.'
         let _ = fs::set_permissions(&script, fs::Permissions::from_mode(0o755));
     }
     ui::ok(&format!("Script de instalacion: {}", script.display()));
-    ui::info("Copia y pega ESTA linea (sudo no ve ~/.local/bin, por eso va la ruta completa):");
-    ui::detail(&format!("sudo {}", script.display()));
+    ui::info("Copia y pega ESTA linea (sudo no ve ~/.local/bin, por eso se usa la ruta con ~):");
+    ui::detail(&format!("sudo {}", short_path(paths, &script)));
     ui::info("No escribas 'sudo crisol ...': sudo no encuentra el binario y Crisol no debe correr como root.");
     ui::info("Después: newgrp kvm (o cierra sesión), crisol vm doctor y crisol vm create windows --iso /ruta/Windows.iso");
     Ok(())
@@ -350,14 +361,14 @@ fn print_next_steps(paths: &Paths, vm: &str, exe: &Path, cmd: &Path) {
     if !disk.exists() {
         ui::warn(&format!(
             "Falta {}: crisol vm create {vm} --iso /ruta/Windows.iso --ram 8 --disk 60",
-            disk.display()
+            short_path(paths, &disk)
         ));
     }
 
     ui::info(&format!("2) Arranca Windows: crisol vm start {vm}"));
     ui::detail(&format!(
         "   Alternativa: {}",
-        dir.join("start.sh").display()
+        short_path(paths, &dir.join("start.sh"))
     ));
 
     ui::info(
@@ -375,7 +386,7 @@ fn print_next_steps(paths: &Paths, vm: &str, exe: &Path, cmd: &Path) {
     ui::detail("crisol vm setup");
     ui::detail(&format!(
         "sudo {}   # pide contraseña; Crisol no lo ejecuta",
-        vms_dir(paths).join("setup-vm.sh").display()
+        short_path(paths, &vms_dir(paths).join("setup-vm.sh"))
     ));
     ui::detail("newgrp kvm   # o cierra sesion y vuelve a entrar");
     ui::detail(&format!(

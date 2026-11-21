@@ -12,7 +12,7 @@ log, applies recipes, retries, extracts the PE icon and registers the app in
 the desktop. When Wine is not enough (kernel anti-cheat, DRM, drivers) it can
 hand the installer off to a Windows VM.
 
-> Status: working prototype, version 0.1.6. Releases `v0.1.0` to `v0.1.6` are
+> Status: working prototype, version 0.1.7. Releases `v0.1.0` to `v0.1.7` are
 > tagged with source tarball, binary and `SHA256SUMS`. Six of the eight community
 > recipes are anonymized/synthetic examples, **not real installation logs**; two
 > use redacted real logs. The VM path has not been boot-tested here and QEMU is
