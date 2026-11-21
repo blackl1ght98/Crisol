@@ -1,3 +1,5 @@
 /target/
 *.log
+# Los fixtures de community-recipes son evidencia verificable: deben versionarse.
+!community-recipes/apps/*/logs/*.log
 .DS_Store
