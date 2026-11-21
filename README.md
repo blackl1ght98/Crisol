@@ -47,7 +47,7 @@ crisol install app.exe --vm                  # pasar directamente a la VM de Win
 crisol install app.exe --vm-fallback         # si Wine falla, pasar a la VM
 
 crisol list                 # apps instaladas
-crisol launch <id>          # ejecutar
+crisol launch <id>          # ejecutar (apps VDS: exige --force, ver abajo)
 crisol repair <id>          # volver a intentar con recetas
 crisol remove <id>          # borrar app y prefijo
 crisol recipes              # recetas cargadas (con la confianza actual)
@@ -144,16 +144,29 @@ crisol launch rufus-4-16-<hash>   # launch usando el ID que imprime Crisol
 Esto evita un falso "instalación fallida" con utilidades portables. Aun así,
 **Rufus no funciona bajo Wine**: necesita Virtual Disk Service (VDS), un servicio
 de Windows que Wine no implementa. No existe un `winetricks` que lo corrija.
-Para grabar una ISO/USB de verdad usa Windows real:
+El volcado típico termina en `Unhandled exception: page fault ... movzwl (%rcx)`
+
+Desde `v0.1.3`, `crisol launch` **bloquea** estas utilidades antes de ejecutar
+Wine: detecta el nombre (`rufus`, `etcher`, `balena`, `usb`, `disk`...), el
+ejecutable o la receta `incompatible-vds`, muestra la explicación y avisa en el
+escritorio. No se ha lanzado nada y puedes elegir:
+
+```bash
+crisol install ~/Descargas/rufus-4.16.exe --vm   # Windows real (recomendado)
+crisol launch rufus-4-16-<hash> --force          # forzar; confirma el fallo
+```
+
+`--force` solo ignora el aviso: no arregla VDS. Para grabar una ISO/USB de
+verdad necesitas la VM con Windows:
 
 ```bash
 crisol vm create windows --iso /ruta/Windows.iso
 crisol install ~/Descargas/rufus-4.16.exe --vm
 ```
 
-Cuando se detecta el CLSID de VDS en un log, la receta interna
-`incompatible-vds` muestra este diagnóstico y detiene los reintentos en vez de
-gastar los 5 intentos. `action_retry = false` ahora se respeta.
+Cuando se detecta el CLSID de VDS (o un `page fault`) en un log, la receta
+interna `incompatible-vds` muestra este diagnóstico y detiene los reintentos en
+vez de gastar los 5 intentos. `action_retry = false` ahora se respeta.
 
 ## Panel de feedback
 

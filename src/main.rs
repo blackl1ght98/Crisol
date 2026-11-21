@@ -91,7 +91,7 @@ fn main() {
                 }
             }
         }
-        Command::Launch(id) => match engine::launch(&paths, &id) {
+        Command::Launch(id, force) => match engine::launch(&paths, &id, force) {
             Ok(()) => 0,
             Err(e) => {
                 ui::err(&e);

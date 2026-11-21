@@ -50,7 +50,8 @@ pub enum Command {
     App(u16),
     Completions(String),
     Install(PathBuf, Options),
-    Launch(String),
+    /// ID de la app y permiso explícito para lanzar una app incompatible.
+    Launch(String, bool),
     List,
     ListJson,
     Remove(String),
@@ -95,6 +96,7 @@ pub fn parse(args: Vec<String>) -> Command {
     let mut opts = Options::default();
     let mut positional: Vec<String> = Vec::new();
     let mut json = false;
+    let mut force = false;
     let mut i = 0;
     while i < args.len() {
         let a = &args[i];
@@ -110,6 +112,7 @@ pub fn parse(args: Vec<String>) -> Command {
             "--yes" | "-y" => opts.yes = true,
             "--interactive" => opts.interactive = true,
             "--execute" | "--smoke-test" => opts.execute = true,
+            "--force" => force = true,
             "--vm" => opts.vm = true,
             "--vm-fallback" => opts.vm_fallback = true,
             "--iso" => {
@@ -271,7 +274,9 @@ pub fn parse(args: Vec<String>) -> Command {
         },
         "app" | "ui" => Command::App(opts.port),
         "completions" => arg.map(Command::Completions).unwrap_or(Command::Help),
-        "launch" | "run" => arg.map(Command::Launch).unwrap_or(Command::Help),
+        "launch" | "run" => arg
+            .map(|id| Command::Launch(id, force))
+            .unwrap_or(Command::Help),
         "remove" | "rm" | "uninstall" => arg.map(Command::Remove).unwrap_or(Command::Help),
         "repair" => arg.map(Command::Repair).unwrap_or(Command::Help),
         "list" | "ls" => {
@@ -307,7 +312,7 @@ pub fn print_help() {
          \n\
          USO\n\
            crisol install <archivo.exe|archivo.msi> [opciones]\n\
-           crisol launch <id>             Ejecuta una app instalada\n\
+           crisol launch <id> [--force]   Ejecuta una app instalada\n\
            crisol list                    Muestra el catalogo\n\
            crisol repair <id>             Repite la instalacion/receta de una app\n\
            crisol remove <id>             Borra la app y su prefijo\n\
@@ -341,6 +346,7 @@ pub fn print_help() {
            --json             Salida JSON en list/doctor/recipes/feedback stats\n\
            --version          Muestra la version\n\
            --yes              No pedir confirmacion\n\
+           --force            En launch, ignora el aviso de app incompatible\n\
          \n\
          EJEMPLOS\n\
            crisol install ~/Descargas/Programa.msi\n\
@@ -352,7 +358,7 @@ pub fn print_help() {
 /// Genera un script de completions estático (sin dependencias).
 pub fn print_completions(shell: &str) {
     let cmds = "install launch list recipes doctor app panel feedback vm setup-desktop repair remove completions help";
-    let flags = "--no-sandbox --yes --interactive --vm --vm-fallback --iso --disk --ram --cpus --gpu-pci --port --attempts --engine --timeout --exe --execute --smoke-test --json --version --help";
+    let flags = "--no-sandbox --yes --interactive --vm --vm-fallback --iso --disk --ram --cpus --gpu-pci --port --attempts --engine --timeout --exe --execute --smoke-test --force --json --version --help";
     match shell {
         "bash" => println!(
             "_crisol() {{\n  local cur=\"${{COMP_WORDS[COMP_CWORD]}}\"\n  COMPREPLY=( $(compgen -W \"{cmds} {flags}\" -- \"$cur\") )\n}}\ncomplete -F _crisol crisol\n"

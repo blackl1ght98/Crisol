@@ -240,6 +240,12 @@ fn known_incompatibility(log: &str) -> Option<&'static str> {
              gestionan discos o memorias USB no pueden funcionar bajo Wine y no\n\
              existe un winetricks que lo corrija: usa Windows real con --vm.",
         )
+    } else if lower.contains("unhandled exception") || lower.contains("page fault") {
+        Some(
+            "La app ha crasheado dentro de Wine (acceso a memoria nulo), tipico de\n\
+             apps que llaman a APIs nativas no implementadas. Si gestiona discos o\n\
+             memorias USB, Wine no puede ejecutarla: usa Windows real con --vm.",
+        )
     } else {
         None
     }
@@ -318,11 +324,14 @@ fn install_portable(
     catalog::upsert(&paths.catalog, entry)?;
 
     ui::ok(&format!("'{name}' registrado como portable. ID: {id}"));
-    ui::info(&format!("Lanzalo con: crisol launch {id}"));
     if is_disk_tool(name) {
         ui::warn("Esta utilidad gestiona discos: Wine no implementa Virtual Disk Service (VDS).");
         ui::detail("Para grabar una USB/ISO de verdad usa: crisol install <archivo> --vm");
-        ui::detail("Si solo quieres ver si arranca: crisol install <archivo> --execute");
+        ui::detail(&format!(
+            "Si aun asi quieres ver el fallo: crisol launch {id} --force"
+        ));
+    } else {
+        ui::info(&format!("Lanzalo con: crisol launch {id}"));
     }
     desktop::notify(
         "Crisol",
@@ -635,7 +644,27 @@ pub fn install(paths: &Paths, opts: &Options, installer_path: &Path) -> Result<R
     })
 }
 
-pub fn launch(paths: &Paths, id: &str) -> Result<(), String> {
+/// Detecta apps que se registraron correctamente pero que no pueden arrancar
+/// bajo Wine. Se usa para avisar ANTES de ejecutarlas: el install de un portable
+/// de disco funciona, el lanzamiento termina en un page fault dentro del PE.
+fn launch_incompatibility(entry: &catalog::Entry) -> bool {
+    if entry
+        .recipes
+        .split(';')
+        .any(|r| r.trim() == "incompatible-vds")
+    {
+        return true;
+    }
+    if is_disk_tool(&entry.name) {
+        return true;
+    }
+    Path::new(&entry.exe)
+        .file_name()
+        .map(|n| is_disk_tool(&n.to_string_lossy()))
+        .unwrap_or(false)
+}
+
+pub fn launch(paths: &Paths, id: &str, force: bool) -> Result<(), String> {
     let entries = catalog::load(&paths.catalog);
     let entry = entries
         .iter()
@@ -645,6 +674,26 @@ pub fn launch(paths: &Paths, id: &str) -> Result<(), String> {
     if !exe.exists() {
         return Err(format!("El ejecutable ya no existe: {}", exe.display()));
     }
+
+    if launch_incompatibility(entry) && !force {
+        let msg = format!(
+            "{} no puede arrancar bajo Wine: Wine no implementa Virtual Disk Service (VDS).\n\
+             No se ha lanzado nada. Opciones:\n\
+             - Windows real: crisol install '{}' --vm  (necesita QEMU e ISO de Windows)\n\
+             - Forzar el intento (probablemente falle): crisol launch {} --force",
+            entry.name, entry.installer, entry.id
+        );
+        ui::header("App incompatible con Wine");
+        ui::warn(&msg);
+        desktop::notify(
+            "Crisol",
+            &format!("{} no se lanzo: necesita VDS / Windows real", entry.name),
+        );
+        return Err(
+            "Lanzamiento bloqueado por incompatibilidad VDS (usa --force para forzar)".into(),
+        );
+    }
+
     let engine = resolve_engine(&Some(entry.engine.clone()));
     let mut args = vec![exe.to_string_lossy().to_string()];
     args.extend(entry.args.split_whitespace().map(|s| s.to_string()));
@@ -663,6 +712,20 @@ pub fn launch(paths: &Paths, id: &str) -> Result<(), String> {
     })?;
     if res.code != Some(0) {
         ui::warn(&format!("La app termino con codigo {:?}", res.code));
+        let reason = known_incompatibility(&res.log).or_else(|| {
+            if launch_incompatibility(entry) {
+                Some(
+                    "Esta app necesita Virtual Disk Service, que Wine no implementa.\n\
+                     No hay winetricks que lo solucione: usa Windows real con --vm.",
+                )
+            } else {
+                None
+            }
+        });
+        if let Some(reason) = reason {
+            ui::warn(reason);
+            desktop::notify("Crisol", "La app fallo: usa Windows real con --vm");
+        }
     }
     Ok(())
 }

@@ -2,7 +2,8 @@
 
 Todos los cambios notables de Crisol. El formato sigue en líneas generales
 [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Hay dos versiones
-publicadas: `v0.1.0`, `v0.1.1` y `v0.1.2`, con tarball fuente, binario y `SHA256SUMS`.
+publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2` y `v0.1.3`, con tarball fuente,
+binario y `SHA256SUMS`.
 
 ## [Unreleased]
 
@@ -11,6 +12,28 @@ publicadas: `v0.1.0`, `v0.1.1` y `v0.1.2`, con tarball fuente, binario y `SHA256
 * Logs reales verificados para recetas comunitarias (objetivo: 20). Campaña en
   `community-recipes/REAL-LOGS.md`.
 * Arranque real de una VM y envío de los borradores de `docs/UPSTREAM.md`.
+
+## [0.1.3]
+
+### Añadido
+
+* `crisol launch <id> --force`: permiso explícito para intentar arrancar una app
+  marcada como incompatible. Sin esa opción, `launch` detecta utilidades de disco
+  (por el nombre, el ejecutable o la receta `incompatible-vds`), explica que Wine
+  no implementa Virtual Disk Service y **no llama a Wine**. También avisa en el
+  escritorio con `notify-send`.
+* Los logs con `Unhandled exception` / `page fault` se reconocen como crash de
+  una API nativa no implementada y muestran la explicación accionable.
+
+### Corregido
+
+* Tras registrar un portable de disco, se indicaba `crisol launch <id>` como si
+  fuese a funcionar; ahora se indica `--vm` y se reserva `--force` para ver el fallo.
+
+### Pruebas
+
+* `tests/integration.sh` comprueba con un `wine` falso y un marcador que `launch`
+  no ejecuta la app VDS sin `--force` y que sí lo hace con `--force`.
 
 ## [0.1.2]
 

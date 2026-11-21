@@ -238,6 +238,40 @@ ok "lanzador de escritorio creado para el portable"
 "$BIN" list | grep -q 'portable' || fail "crisol list no muestra el estado portable"
 ok "crisol list muestra el portable en el catálogo"
 
+# ---------------------------------------------------------------------------
+# launch: una utilidad de disco NO se ejecuta sin --force. wine falso con
+# marcador para comprobar que no se llega a llamar al motor.
+# ---------------------------------------------------------------------------
+portable_id="$(grep -o 'ID: [^ ]*' <<<"$out" | tail -n1 | cut -d' ' -f2)"
+[[ -n "$portable_id" ]] || fail "no se pudo obtener el ID del portable"
+
+cat > "$TMP_ROOT/bin/wine" <<'EOS'
+#!/bin/sh
+printf 'wine llamado\n' >> "$CRISOL_TEST_WINE_CALLS"
+exit 0
+EOS
+chmod +x "$TMP_ROOT/bin/wine"
+export CRISOL_TEST_WINE_CALLS="$TMP_ROOT/wine-calls"
+: > "$CRISOL_TEST_WINE_CALLS"
+
+printf '\n==> Intentando lanzar portable VDS sin --force\n'
+if launch_out="$(PATH="$TMP_ROOT/bin:$PATH" "$BIN" launch "$portable_id" 2>&1)"; then
+  printf '%s\n' "$launch_out" >&2
+  fail "launch debería bloquear la app incompatible"
+fi
+grep -q 'Virtual Disk Service' <<<"$launch_out" || fail "falta la explicación VDS en launch"
+grep -q -- '--force' <<<"$launch_out" || fail "launch no ofrece --force"
+[[ ! -s "$CRISOL_TEST_WINE_CALLS" ]] || fail "se llamó a wine sin --force"
+ok "launch bloquea la app VDS antes de ejecutar wine"
+
+printf '\n==> Lanzando el mismo portable con --force\n'
+if ! launch_out="$(PATH="$TMP_ROOT/bin:$PATH" "$BIN" launch "$portable_id" --force 2>&1)"; then
+  printf '%s\n' "$launch_out" >&2
+  fail "launch --force falló"
+fi
+[[ -s "$CRISOL_TEST_WINE_CALLS" ]] || fail "wine no fue llamado con --force"
+ok "launch --force ejecuta wine (el usuario asume el riesgo)"
+
 grep -q 'incompatible-vds' "$ROOT/recipes/core.recipe" || fail "falta la receta VDS en core.recipe"
 "$BIN" --json recipes | grep -q 'incompatible-vds' || fail "la receta VDS no aparece en crisol --json recipes"
 ok "receta de diagnóstico VDS activa por defecto"

@@ -12,7 +12,7 @@ log, applies recipes, retries, extracts the PE icon and registers the app in
 the desktop. When Wine is not enough (kernel anti-cheat, DRM, drivers) it can
 hand the installer off to a Windows VM.
 
-> Status: working prototype, version 0.1.2. Releases `v0.1.0` to `v0.1.2` are
+> Status: working prototype, version 0.1.3. Releases `v0.1.0` to `v0.1.3` are
 > tagged with source tarball, binary and `SHA256SUMS`. Six of the eight community
 > recipes are anonymized/synthetic examples, **not real installation logs**; two
 > use redacted real logs. The VM path has not been boot-tested here and QEMU is
@@ -30,7 +30,7 @@ crisol install portable.exe --execute           # force execution as a smoke tes
 crisol install app.exe --vm                     # hand off to the Windows VM
 
 crisol list                                    # installed apps
-crisol launch <id>
+crisol launch <id>                             # --force overrides the VDS warning
 crisol repair <id>                             # retry with matching recipes
 crisol remove <id>
 crisol doctor
@@ -56,9 +56,11 @@ tools/validate-recipes.sh
 
 Silent flags reduce but do not remove clicks. `bubblewrap` is practical
 isolation, not a strong security boundary (`--no-sandbox` disables it). The
-panel listens only on 127.0.0.1 but its token/CSRF hardening is still pending.
+panel listens only on 127.0.0.1 and enforces a local token plus CSRF/Origin checks.
 Crisol does not ship Microsoft DLLs or runtimes, does not install QEMU or
-Windows, and never runs `sudo` for you.
+Windows, and never runs `sudo` for you. Disk utilities such as Rufus cannot run
+under Wine (no Virtual Disk Service): `crisol launch` blocks them unless you pass
+`--force`, which only confirms the crash; use a Windows VM instead.
 
 Licensed under MIT. See [CONTRIBUTING](docs/CONTRIBUTING.md) and the
 [code of conduct](CODE_OF_CONDUCT.md).
