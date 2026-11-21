@@ -112,8 +112,21 @@ pub fn setup(paths: &Paths) -> Result<(), String> {
     fs::create_dir_all(script.parent().unwrap()).map_err(|e| e.to_string())?;
     let body = r#"#!/usr/bin/env bash
 set -euo pipefail
-# Ejecutar con sudo. CachyOS/Arch:
-pacman -S --needed qemu ovmf qemu-img virt-manager virtio-win
+# Ejecutar con sudo. CachyOS/Arch.
+# qemu-desktop incluye qemu-img y la interfaz GTK que usa el start.sh de Crisol;
+# fijar el paquete evita la pregunta interactiva de proveedores de 'qemu'.
+pacman -S --needed qemu-desktop ovmf virt-manager
+
+# virtio-win NO esta en los repos oficiales de Arch/CachyOS (esta en AUR).
+# Es opcional: sin el ISO los drivers virtio no se instalan en el guest.
+if ! pacman -S --needed virtio-win; then
+  echo 'Aviso: virtio-win no esta en tus repositorios configurados.'
+  echo 'Opciones:'
+  echo '  1) Instalar desde AUR: yay -S virtio-win'
+  echo '  2) Descargar el ISO de controladores desde:'
+  echo '     https://github.com/virtio-win/virtio-win-pkg-scripts#readme'
+fi
+
 usermod -aG kvm "$SUDO_USER"
 echo 'Para GPU passthrough añade al arranque: amd_iommu=on iommu=pt  (o intel_iommu=on iommu=pt)'
 echo 'Despues: newgrp kvm  o  cerrar sesion y volver a entrar.'
@@ -371,9 +384,9 @@ fn print_next_steps(paths: &Paths, vm: &str, exe: &Path, cmd: &Path) {
         short_path(paths, &dir.join("start.sh"))
     ));
 
-    ui::info(
-        "3) Si es la primera vez, instala Windows desde la ISO y los drivers virtio (virtio-win).",
-    );
+    ui::info("3) Si es la primera vez, instala Windows desde la ISO y los drivers virtio.");
+    ui::detail("virtio-win no esta en los repos de Arch/CachyOS: usa 'yay -S virtio-win' o descarga el ISO de");
+    ui::detail("https://github.com/virtio-win/virtio-win-pkg-scripts#readme");
 
     ui::info("4) Dentro de Windows abre un Simbolo del sistema y ejecuta el bloque final.");
 

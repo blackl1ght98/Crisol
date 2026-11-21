@@ -89,6 +89,12 @@ if grep -q 'sudo crisol vm setup' <<<"$setup_out"; then
 fi
 ok "vm setup muestra 'sudo <ruta absoluta>' y no 'sudo crisol'"
 
+SETUP_SCRIPT="$XDG_DATA_HOME/crisol/vms/setup-vm.sh"
+grep -q 'qemu-desktop' "$SETUP_SCRIPT" || fail "setup-vm.sh no fija qemu-desktop"
+grep -q 'virtio-win' "$SETUP_SCRIPT" || fail "setup-vm.sh no menciona virtio-win"
+grep -q '|| true\|if ! pacman' "$SETUP_SCRIPT" || fail "virtio-win no es opcional en setup-vm.sh"
+ok "setup-vm.sh usa qemu-desktop y trata virtio-win como opcional"
+
 # ---------------------------------------------------------------------------
 # Catálogo de prueba con 11 columnas (la última con dos recetas).
 # ---------------------------------------------------------------------------

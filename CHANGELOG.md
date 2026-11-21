@@ -3,7 +3,7 @@
 Todos los cambios notables de Crisol. El formato sigue en líneas generales
 [Keep a Changelog](https://keepachangelog.com/es/1.1.0/). Hay dos versiones
 publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.1.3`, `v0.1.4`, `v0.1.5`,
-`v0.1.6` y `v0.1.7`, con tarball fuente, binario y `SHA256SUMS`.
+`v0.1.6`, `v0.1.7` y `v0.1.8`, con tarball fuente, binario y `SHA256SUMS`.
 
 ## [Unreleased]
 
@@ -12,6 +12,22 @@ publicadas: `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.1.3`, `v0.1.4`, `v0.1.5`,
 * Logs reales verificados para recetas comunitarias (objetivo: 20). Campaña en
   `community-recipes/REAL-LOGS.md`.
 * Arranque real de una VM y envío de los borradores de `docs/UPSTREAM.md`.
+
+## [0.1.8]
+
+### Corregido
+
+* `setup-vm.sh` instalaba `virtio-win`, que no existe en los repositorios de
+  Arch/CachyOS, y `set -e` abortaba toda la instalación. Ahora instala
+  `qemu-desktop` (incluye `qemu-img` y GTK, sin preguntar por proveedores) y
+  trata `virtio-win` como opcional, con instrucciones para AUR o el ISO oficial.
+* La guía VM explica de dónde sacar los drivers virtio cuando no están en los
+  repos.
+
+### Pruebas
+
+* `tests/integration.sh` comprueba que el script usa `qemu-desktop` y que
+  `virtio-win` es opcional.
 
 ## [0.1.7]
 

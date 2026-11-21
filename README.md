@@ -119,6 +119,11 @@ crisol vm create windows --iso ~/ISO/Windows.iso --ram 8 --disk 60
 crisol vm start windows
 ```
 
+En Arch/CachyOS, `setup-vm.sh` instala `qemu-desktop`, `ovmf` y `virt-manager`.
+`virtio-win` no está en los repos oficiales: el script lo intenta, avisa si
+falla y sugiere `yay -S virtio-win` o descargar el ISO de
+https://github.com/virtio-win/virtio-win-pkg-scripts#readme
+
 La VM se crea con disco `qcow2`, virtio, red, audio, PCIe y una carpeta
 compartida 9p (`share`, montable en el guest como `Z: \\.\crisol`). `crisol
 install app.exe --vm` (o `--vm-fallback` tras agotar los reintentos de Wine)
