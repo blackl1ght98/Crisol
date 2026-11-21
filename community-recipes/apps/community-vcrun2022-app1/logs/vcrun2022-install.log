@@ -1,0 +1,16 @@
+0024:err:module:import_dll Library msvcp140.dll (which is needed by L"Z:\\setup.exe") not found
+0024:err:module:import_dll Library vcruntime140.dll (which is needed by L"Z:\\setup.exe") not found
+0024:err:module:import_dll Library api-ms-win-crt-runtime-l1-1-0.dll (which is needed by L"Z:\\setup.exe") not found
+0024:err:module:load_builtin_dll failed to load builtin: concrt140.dll
+0024:err:module:LdrInitializeThunk Main exe initialization for L"Z:\\setup.exe" failed, status c0000135
+0024:fixme:ntdll:NtQuerySystemInformation info_class SYSTEM_PERFORMANCE_INFORMATION
+0024:fixme:process:SetProcessPriorityClass (process=0xffffffff) 0x20: stub
+0024:err:seh:setup_exception stack overflow in thread 0024 at address 0x7bc01234
+0024:warn:threadname:NtSetInformationThread Thread renamed to L"crisol_installer"
+0009:fixme:msi:ACTION_CallMsiDoAction action="CostInitialize"
+MSI (s) (58:20) [10:12:04:221]: Note: 1: 2205 2:  3: Error
+MSI (s) (58:20) [10:12:04:233]: Product: Generic Runtime 2022 -- Installation failed with error 0xc0000135.
+0024:err:module:import_dll Loading MSVCP140.DLL failed (error c0000135).
+wine: Unhandled page fault on read access to 0x00000000 at address 0x7b012345
+NSIS: ExecWait returned 5: required MSVC runtime not installed
+0024:err:module:process_exit process 0x24 exited with status 5

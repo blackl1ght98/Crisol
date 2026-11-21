@@ -1,0 +1,10 @@
+0158:fixme:file:GetFinalPathNameByHandleW FILE_NAME_OPENED not supported
+0158:fixme:file:GetFinalPathNameByHandleW FILE_NAME_OPENED not supported
+0158:fixme:ole:CoInitializeSecurity 0000000000000000, -1, 0000000000000000, 0000000000000000, 2, 3, 0000000000000000, 0, 0000000000000000 stub
+0158:err:ole:create_server class {9c38ed61-d565-4728-aeee-c80952f0ecde} not registered
+0158:fixme:ole:com_get_class_object CLSCTX_REMOTE_SERVER not supported
+0158:err:ole:com_get_class_object no class object {9c38ed61-d565-4728-aeee-c80952f0ecde} could be created for context 0x14
+0158:fixme:wldp:WldpQueryWindowsLockdownMode 000000000011F6AC
+wine: Unhandled page fault on read access to 0000000000000000 at address 000000014003C580 (thread 0158), starting debugger...
+0164:fixme:dbghelp:elf_search_auxv can't find symbol in module
+0164:fixme:dbghelp:elf_search_auxv can't find symbol in module

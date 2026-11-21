@@ -1,0 +1,34 @@
+0160:fixme:win:RegisterPowerSettingNotification (000000000002005A,{02731015-4510-4526-99e6-e5a17ebd1aea},0): stub
+0160:fixme:font:find_matching_face Untranslated charset 255
+0160:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\usr\\share\\fonts\\OTF\\SyrCOMEdessa.otf"
+016c:fixme:kernelbase:AppPolicyGetThreadInitializationType FFFFFFFFFFFFFFFA, 000000000269FF50
+0160:fixme:ntdll:NtQuerySystemInformation info_class SYSTEM_PERFORMANCE_INFORMATION
+0160:err:vulkan:init_physical_devices Failed to enumerate physical devices, res -3
+MESA-EGL: warning: pci id for fd 72: vvvv:dddd, driver (null)
+pci id for fd 73: vvvv:dddd, driver (null)
+pci id for fd 74: vvvv:dddd, driver (null)
+MESA-EGL: warning: egl: failed to create dri2 screen
+pci id for fd 73: vvvv:dddd, driver (null)
+pci id for fd 74: vvvv:dddd, driver (null)
+MESA-EGL: warning: egl: failed to create dri2 screen
+0160:fixme:d3d:wined3d_guess_card No card selector available for card vendor 0000 (using GL_RENDERER "llvmpipe (LLVM <version>, 256 bits)").
+0160:fixme:netprofm:init_networks no support for detecting network changes
+0160:fixme:netprofm:connection_point_Advise 000000000199CEA0, 000000000180DD90, 000000000180DDB4 - semi-stub
+0160:fixme:d3d:wined3d_guess_card No card selector available for card vendor 0000 (using GL_RENDERER "llvmpipe (LLVM <version>, 256 bits)").
+0160:fixme:system:EnableNonClientDpiScaling (000000000002006A): stub
+0194:fixme:netprofm:init_networks no support for detecting network changes
+0194:fixme:netprofm:connection_GetAdapterId 0000000006C8B3E0, 0000000003FBBB38
+0194:fixme:netprofm:connection_point_Advise 0000000006C96D20, 0000000006C90FB0, 0000000006C90FE4 - semi-stub
+0160:fixme:netprofm:init_networks no support for detecting network changes
+0160:fixme:netprofm:connection_point_Advise 000000000199E070, 0000000006D37B80, 0000000006D37BA4 - semi-stub
+01d0:fixme:netprofm:init_networks no support for detecting network changes
+01d0:fixme:netprofm:connection_GetAdapterId 0000000006D62AE0, 000000000742BB38
+01d0:fixme:netprofm:connection_point_Advise 0000000006D70CB0, 0000000006D6AF40, 0000000006D6AF74 - semi-stub
+01d8:fixme:ntdll:NtQuerySystemInformation info_class SYSTEM_PERFORMANCE_INFORMATION
+01e8:fixme:ntdll:NtQuerySystemInformation info_class SYSTEM_PERFORMANCE_INFORMATION
+chmod: cambiando los permisos de '/home/<usuario>/Escritorio/<launcher>.desktop': Sistema de ficheros de sólo lectura
+chmod: cambiando los permisos de '/home/<usuario>/Escritorio/<app>.desktop': Sistema de ficheros de sólo lectura
+0238:fixme:process:GetProcessWorkingSetSizeEx (FFFFFFFFFFFFFFFF,000000000011FE70,000000000011FE78,0000000000000000): stub
+0240:fixme:kernelbase:AppPolicyGetThreadInitializationType FFFFFFFFFFFFFFFA, 000000000195FF50
+0160:fixme:win:UnregisterPowerSettingNotification (00000000DEADBEEF): stub
+0160:fixme:kernelbase:AppPolicyGetProcessTerminationMethod FFFFFFFFFFFFFFFA, 000000000011FE80

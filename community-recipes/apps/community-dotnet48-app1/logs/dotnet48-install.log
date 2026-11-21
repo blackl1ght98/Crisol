@@ -1,0 +1,16 @@
+0009:fixme:msi:ACTION_CallMsiDoAction action="AppSearch"
+MSI (s) (2C:08) [11:02:15:004]: Product: Generic Suite 1.0 -- Error 1722.
+MSI (s) (2C:08) [11:02:15:006]: Action ended 11:02:15: InstallExecute. Return value 3.
+0108:err:module:import_dll Library mscorlib.dll (which is needed by L"Z:\\app\\launcher.exe") not found
+0108:err:module:import_dll Library System.Runtime.dll (which is needed by L"Z:\\app\\launcher.exe") not found
+0108:err:seh:raise_exception Unhandled exception: System.IO.FileNotFoundException
+Unhandled exception: System.IO.IOException: Could not load assembly 'mscorlib.dll'.
+0108:fixme:mscoree:CLRCreateInstance (...) stub
+0108:warn:mscoree:load_mono could not load mono runtime
+MSI (s) (2C:08) [11:02:16:101]: This setup requires .NET Framework 4 or later.
+0108:fixme:msi:msi_dialog showing dialog ErrorDialog
+NSIS: DetailPrint: dotnet48 check failed (registry key missing)
+0108:err:module:load_builtin_dll failed to load builtin: mscoree.dll
+0108:err:ntdll:RtlpWaitForCriticalSection section 0x7b830040 wait timed out
+wine: Unhandled exception 0xe0434352 in thread 0108
+0108:err:module:process_exit process 0x108 exited with status 255

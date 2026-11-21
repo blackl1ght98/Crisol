@@ -1,0 +1,15 @@
+0020:fixme:font:find_matching_font font "Tahoma" not found, substituting
+0020:warn:font:font_missing Fonts from corefonts are missing: arial, tahoma, times new roman.
+0020:fixme:font:get_font_family Could not find family "Times New Roman"
+0009:fixme:msi:ACTION_CallMsiDoAction action="InstallInitialize"
+MSI (s) (10:18) [16:31:02:118]: Installing font Arial to C:\\windows\\Fonts
+MSI (s) (10:18) [16:31:02:130]: Error 2753. The File 'tahoma.ttf' is not marked for installation.
+0020:fixme:font:freetype_GetFontFamily stub
+NSIS: DetailPrint: Instalando fuentes basicas
+0020:err:module:import_dll Library gdiplus.dll (which is needed by L"Z:\\setup.exe") not found
+0020:fixme:font:EnumFontFamiliesExW ((nil),0x33f8e0,0x7b430120,2,0): stub
+0020:warn:x11drv:font_list could not match requested font, using DejaVu Sans
+0020:fixme:msi:msi_dialog showing dialog FatalError
+0020:err:seh:raise_exception Exception code c0000005
+wine: Unhandled exception 0xc0000005 in thread 0020
+0020:err:module:process_exit process 0x20 exited with status 1603

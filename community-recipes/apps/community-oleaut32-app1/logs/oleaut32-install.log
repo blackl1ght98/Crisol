@@ -1,0 +1,15 @@
+00fc:err:ole:CoGetClassObject class {00020424-0000-0000-c000-000000000046} not registered
+00fc:err:ole:create_server class not registered
+00fc:err:ole:CoCreateInstance no class factory created for CLSID {00020424-0000-0000-c000-000000000046}, hr=0x80040154
+00fc:err:module:import_dll Library oleaut32.dll (which is needed by L"Z:\\tools\\config.exe") not found
+00fc:err:module:load_builtin_dll failed to load builtin: oleaut32.dll
+00fc:fixme:oleaut32:GetActiveObject (0x7ffd0000) stub
+0009:fixme:msi:ACTION_CallMsiDoAction action="RegisterComPlus"
+MSI (s) (14:24) [14:20:31:009]: Error 1903. Module oleaut32.dll failed to register. HRESULT -2147220473.
+MSI (s) (14:24) [14:20:31:011]: error 0x80040154 while registering type library
+regsvr32: failed to load oleaut32.dll
+00fc:fixme:regsvr32:DllRegisterServer stub
+00fc:err:seh:raise_exception Exception code 80040154
+00fc:warn:ole:CoInitializeEx failed with 0x80040154
+wine: Unhandled exception 0x80040154 in thread 00fc
+00fc:err:module:process_exit process 0xfc exited with status 1

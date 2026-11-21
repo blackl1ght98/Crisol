@@ -1,0 +1,15 @@
+00d0:err:module:import_dll Library msxml6.dll (which is needed by L"Z:\\updater\\sync.exe") not found
+00d0:err:module:import_dll Library msxml3.dll (which is needed by L"Z:\\updater\\sync.exe") not found
+00d0:fixme:msxml:xml_parser_free unimplemented stub
+0009:fixme:msi:ACTION_CallMsiDoAction action="RegisterProduct"
+MSI (s) (30:0C) [08:15:47:661]: Error 1904. Module C:\\windows\\system32\\msxml3.dll failed to register. HRESULT -2147220473.
+MSI (s) (30:0C) [08:15:47:670]: Error 1904. Module C:\\windows\\system32\\msxml6.dll failed to register.
+00d0:err:ole:CoCreateInstance no class factory created for CLSID {88d96a05-f192-11d4-a65f-0040963251e5}
+00d0:err:seh:raise_exception Exception code c0000135
+NSIS: DetailPrint: MSXML parser unavailable
+00d0:fixme:urlmon:URLMonRequest_QueryInterface stub
+00d0:err:module:load_builtin_dll failed to load builtin: msxml6.dll
+00d0:warn:module:load_dll Failed to load DLL L"Z:\\updater\\msxml3.dll"
+00d0:fixme:msi:msi_dialog showing dialog ErrorDialog
+wine: Unhandled exception 0xc0000135 in thread 00d0
+00d0:err:module:process_exit process 0xd0 exited with status 5

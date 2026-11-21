@@ -1,0 +1,15 @@
+003c:err:module:import_dll Library d3dx9_43.dll (which is needed by L"Z:\\bin\\client.exe") not found
+003c:err:module:import_dll Library dinput8.dll (which is needed by L"Z:\\bin\\client.exe") not found
+003c:err:module:import_dll Library xinput1_3.dll (which is needed by L"Z:\\bin\\client.exe") not found
+003c:err:module:load_builtin_dll failed to load builtin: d3dx9_43.dll
+003c:fixme:d3d:d3d_create D3DDEVTYPE_HAL not available, falling back
+003c:err:d3d:device_init Failed to create Direct3D 9 device
+NSIS: DetailPrint: Instalando bibliotecas DirectX
+NSIS: ExecWait returned 193: %1 is not a valid Win32 application
+0009:fixme:msi:ACTION_CallMsiDoAction action="InstallFiles"
+MSI (s) (08:10) [09:44:01:552]: Error 1904. Module d3dx9_43.dll failed to register. HRESULT -2147220473.
+003c:fixme:win:EnumDisplayDevicesW ((nil),1,0x33f9d0,0x00000000): stub
+003c:err:seh:raise_exception Exception code c0000005
+003c:warn:module:load_dll Failed to load DLL L"Z:\\bin\\dinput8.dll"
+wine: Unhandled page fault on write access to 0x00000010 at address 0x7b003456
+003c:err:module:process_exit process 0x3c exited with status 193
