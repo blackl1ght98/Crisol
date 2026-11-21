@@ -115,7 +115,17 @@ set -euo pipefail
 # Ejecutar con sudo. CachyOS/Arch.
 # qemu-desktop incluye qemu-img y la interfaz GTK que usa el start.sh de Crisol;
 # fijar el paquete evita la pregunta interactiva de proveedores de 'qemu'.
-pacman -S --needed qemu-desktop ovmf virt-manager
+# -Syy fuerza la recarga de las bases de datos: una DB desactualizada da 404s.
+pacman -Syy
+
+if ! pacman -S --needed qemu-desktop ovmf virt-manager; then
+  echo 'Fallo la descarga. Casi siempre es un mirror roto o desactualizado.'
+  echo 'Prueba esto y vuelve a ejecutar el script:'
+  echo '  sudo sed -i "/mirror5\.krfoss\.org/s/^/#/" /etc/pacman.d/cachyos-mirrorlist'
+  echo '  sudo reflector --latest 10 --protocol https --sort rate --save /etc/pacman.d/mirrorlist'
+  echo '  sudo pacman -Syy'
+  exit 1
+fi
 
 # virtio-win NO esta en los repos oficiales de Arch/CachyOS (esta en AUR).
 # Es opcional: sin el ISO los drivers virtio no se instalan en el guest.

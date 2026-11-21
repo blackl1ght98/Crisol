@@ -93,7 +93,9 @@ SETUP_SCRIPT="$XDG_DATA_HOME/crisol/vms/setup-vm.sh"
 grep -q 'qemu-desktop' "$SETUP_SCRIPT" || fail "setup-vm.sh no fija qemu-desktop"
 grep -q 'virtio-win' "$SETUP_SCRIPT" || fail "setup-vm.sh no menciona virtio-win"
 grep -q '|| true\|if ! pacman' "$SETUP_SCRIPT" || fail "virtio-win no es opcional en setup-vm.sh"
-ok "setup-vm.sh usa qemu-desktop y trata virtio-win como opcional"
+grep -q 'pacman -Syy' "$SETUP_SCRIPT" || fail "setup-vm.sh no refresca la base de datos"
+grep -q 'reflector' "$SETUP_SCRIPT" || fail "setup-vm.sh no explica qué hacer si el mirror falla"
+ok "setup-vm.sh usa qemu-desktop, virtio-win opcional y guía ante fallos de mirror"
 
 # ---------------------------------------------------------------------------
 # Catálogo de prueba con 11 columnas (la última con dos recetas).

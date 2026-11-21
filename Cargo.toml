@@ -1,6 +1,6 @@
 [package]
 name = "crisol"
-version = "0.1.8"
+version = "0.1.9"
 edition = "2021"
 description = "Capa de orquestacion de compatibilidad Windows sobre Wine: instala .exe/.msi, repara y los integra en el escritorio"
 
